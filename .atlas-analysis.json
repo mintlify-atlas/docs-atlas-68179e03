@@ -1,0 +1,128 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Gentle AI",
+  "projectDescription": "One command to configure any AI coding agent with the Gentleman AI ecosystem — memory, skills, workflow, and MCP tools.",
+  "theme": "aspen",
+  "primaryColor": "#94cb04",
+  "lightColor": "#545454",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/overview",
+              "concepts/agents",
+              "concepts/components",
+              "concepts/skills",
+              "concepts/presets",
+              "concepts/personas"
+            ]
+          },
+          {
+            "group": "Usage",
+            "pages": [
+              "usage/interactive-tui",
+              "usage/cli-mode",
+              "usage/flags-reference",
+              "usage/dry-run"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "components/engram",
+              "components/sdd",
+              "components/skills",
+              "components/context7",
+              "components/persona",
+              "components/permissions",
+              "components/gga",
+              "components/theme"
+            ]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "agents/overview",
+              "agents/claude-code",
+              "agents/opencode",
+              "agents/gemini-cli",
+              "agents/cursor",
+              "agents/vscode-copilot"
+            ]
+          },
+          {
+            "group": "Skills Reference",
+            "pages": [
+              "skills/overview",
+              "skills/sdd-workflow",
+              "skills/foundation"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/architecture",
+              "advanced/dependency-management",
+              "advanced/platform-support",
+              "advanced/testing",
+              "advanced/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Commands",
+            "pages": [
+              "api/install",
+              "api/version"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "api/config-structure",
+              "api/agent-adapters"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Multi-agent configurator supporting Claude Code, OpenCode, Gemini CLI, Cursor, and VS Code Copilot",
+    "Interactive TUI with Bubbletea for guided setup",
+    "Component-based architecture with 8 ecosystem components",
+    "11 curated coding skills including 9-phase SDD workflow",
+    "Cross-platform support for macOS, Linux, and Windows",
+    "Automatic dependency detection and installation",
+    "Dry-run mode for previewing changes",
+    "Backup and restore functionality"
+  ],
+  "publicApiSurface": [
+    "gentle-ai",
+    "gentle-ai install",
+    "gentle-ai install --agent <agents>",
+    "gentle-ai install --preset <preset>",
+    "gentle-ai install --component <components>",
+    "gentle-ai install --skill <skills>",
+    "gentle-ai install --persona <persona>",
+    "gentle-ai install --dry-run",
+    "gentle-ai --version"
+  ]
+}
