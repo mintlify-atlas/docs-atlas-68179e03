@@ -1,0 +1,332 @@
+---
+title: Gemini CLI
+description: Google's CLI agent with experimental sub-agent support
+---
+
+Gemini CLI is Google's command-line coding agent powered by Gemini models. It receives full Gentleman stack support with experimental sub-agent capabilities.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Skills" icon="book-open">
+    Full SDD workflow + foundation skills loaded from `~/.gemini/skills/`
+  </Card>
+  <Card title="MCP Servers" icon="server">
+    Context7 and custom servers merged into `settings.json`
+  </Card>
+  <Card title="Sub-agents" icon="flask">
+    Experimental sub-agents defined as markdown files in `~/.gemini/agents/`
+  </Card>
+  <Card title="Gemini Models" icon="gem">
+    Access to Gemini 1.5 Pro, Flash, and other Google AI models
+  </Card>
+</CardGroup>
+
+## Installation
+
+Gemini CLI can be auto-installed by Gentle AI:
+
+```bash
+gentle-ai install --agent gemini-cli --preset full-gentleman
+```
+
+This installs Gemini CLI via npm and configures the full ecosystem.
+
+### Manual Installation
+
+If you prefer to install Gemini CLI manually:
+
+```bash
+# Install Gemini CLI
+npm install -g @google/gemini-cli
+
+# Then configure with Gentle AI
+gentle-ai install --agent gemini-cli --preset full-gentleman
+```
+
+## Configuration
+
+### Config Directory
+
+All Gemini CLI configuration lives in `~/.gemini/`:
+
+```
+~/.gemini/
+├── GEMINI.md              # System prompt (Gentleman persona + SDD orchestrator)
+├── settings.json          # Gemini CLI settings + MCP config
+├── skills/                # Skill files (SDD + foundation)
+│   ├── sdd-init.md
+│   ├── sdd-propose.md
+│   ├── go-testing.md
+│   └── ...
+└── agents/                # Custom sub-agents (experimental)
+    └── custom-agent.md
+```
+
+### Windows Config Path
+
+```powershell
+%USERPROFILE%\.gemini\
+```
+
+## System Prompt Strategy
+
+Gemini CLI uses **file replacement** for system prompt:
+
+- System prompt file: `~/.gemini/GEMINI.md`
+- Gentle AI writes the full system prompt on every update
+- Previous content is backed up before replacement
+- No marker-based merging — full file control
+
+### Example Structure
+
+```markdown
+# Gemini CLI System Prompt
+
+## Gentleman Persona
+
+You are a teaching-oriented coding mentor...
+
+## SDD Orchestrator
+
+Spec-Driven Development workflow with 9 phases...
+
+## Skills
+
+You have access to the following skills:
+- sdd-init: Bootstrap SDD context
+- sdd-propose: Create change proposals
+...
+```
+
+## MCP Configuration
+
+Gemini CLI uses **settings merge** for MCP:
+
+- Config file: `~/.gemini/settings.json`
+- MCP config is merged into the `mcpServers` section
+- Existing settings are preserved
+- Gentle AI only updates MCP-related keys
+
+### Context7 Configuration
+
+Gentle AI installs Context7 MCP server:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"]
+    }
+  }
+}
+```
+
+## Sub-agent Support (Experimental)
+
+Gemini CLI has **experimental sub-agent support** that requires opt-in:
+
+### Enable Sub-agents
+
+Edit `~/.gemini/settings.json` and add:
+
+```json
+{
+  "experimental": {
+    "enableAgents": true
+  }
+}
+```
+
+### Custom Sub-agents
+
+Define custom sub-agents as markdown files in `~/.gemini/agents/`:
+
+```bash
+mkdir -p ~/.gemini/agents
+touch ~/.gemini/agents/code-reviewer.md
+```
+
+Define the agent:
+
+```markdown
+# Code Reviewer Agent
+
+You are a code review specialist focused on:
+
+- Security vulnerabilities
+- Performance issues
+- Code quality and maintainability
+- Best practices adherence
+
+When reviewing code:
+
+1. Analyze the changes
+2. Identify issues by category
+3. Suggest improvements
+4. Provide examples of better approaches
+```
+
+### How Sub-agents Work
+
+1. Main agent receives a request
+2. Agent delegates to custom sub-agent
+3. Sub-agent executes with specialized instructions
+4. Results return to main agent
+5. Main agent synthesizes and continues
+
+<Warning>
+  Sub-agent support is experimental. API and behavior may change in future Gemini CLI releases.
+</Warning>
+
+## Skills
+
+All 11 curated skills are installed:
+
+### SDD Workflow (9 skills)
+
+- `sdd-init` — Bootstrap SDD context
+- `sdd-explore` — Investigate codebase
+- `sdd-propose` — Create change proposals
+- `sdd-spec` — Write specifications
+- `sdd-design` — Technical design
+- `sdd-tasks` — Break down implementation
+- `sdd-apply` — Implement tasks
+- `sdd-verify` — Validate implementation
+- `sdd-archive` — Sync specs and archive
+
+### Foundation Skills (2 skills)
+
+- `go-testing` — Go testing patterns (including Bubbletea TUI testing)
+- `skill-creator` — Create new skills following the Agent Skills spec
+
+Skills are loaded from `~/.gemini/skills/` as markdown files.
+
+## What Gentle AI Installs
+
+When you run `gentle-ai install --agent gemini-cli --preset full-gentleman`:
+
+1. **Installs Gemini CLI** via npm (if not already installed)
+2. **Creates config directory** at `~/.gemini/`
+3. **Writes system prompt** to `GEMINI.md` with Gentleman persona + SDD orchestrator
+4. **Installs 11 skill files** in `~/.gemini/skills/`
+5. **Configures Context7 MCP server** in `settings.json`
+6. **Installs GGA binary** globally (opt-in per project with `gga init`)
+7. **Creates agents directory** for custom sub-agents
+
+## Platform Notes
+
+### macOS
+
+```bash
+brew tap Gentleman-Programming/homebrew-tap
+brew install gentle-ai
+gentle-ai install --agent gemini-cli --preset full-gentleman
+```
+
+### Linux
+
+```bash
+# Ubuntu/Debian
+sudo apt install npm
+npm install -g @google/gemini-cli
+gentle-ai install --agent gemini-cli --preset full-gentleman
+
+# Arch
+sudo pacman -S npm
+npm install -g @google/gemini-cli
+gentle-ai install --agent gemini-cli --preset full-gentleman
+```
+
+### Windows
+
+```powershell
+# Install Node.js if not present
+winget install OpenJS.NodeJS
+
+# Install Gemini CLI
+npm install -g @google/gemini-cli
+
+# Configure with Gentle AI
+gentle-ai.exe install --agent gemini-cli --preset full-gentleman
+```
+
+Config lives in `%USERPROFILE%\.gemini\`
+
+## Verification
+
+After installation, verify the configuration:
+
+```bash
+# Check Gemini CLI is installed
+gemini --version
+
+# Check config directory exists
+ls ~/.gemini/
+
+# Check skills are installed
+ls ~/.gemini/skills/
+
+# Check MCP is configured
+cat ~/.gemini/settings.json | grep context7
+
+# Check system prompt
+cat ~/.gemini/GEMINI.md
+```
+
+## Troubleshooting
+
+### Gemini CLI Not Found
+
+If `gemini` command is not found after installation:
+
+```bash
+# Check npm global bin path
+npm bin -g
+
+# Add to PATH (add to ~/.bashrc or ~/.zshrc)
+export PATH="$(npm bin -g):$PATH"
+```
+
+### MCP Server Not Loading
+
+If Context7 doesn't load:
+
+1. Check `~/.gemini/settings.json` exists
+2. Verify MCP section is present: `cat ~/.gemini/settings.json | grep mcpServers`
+3. Test server manually: `npx -y @context7/mcp-server`
+
+### Skills Not Available
+
+If skills aren't loading:
+
+1. Check `~/.gemini/skills/` directory exists
+2. Verify skill files are markdown: `ls ~/.gemini/skills/*.md`
+3. Check system prompt references skills: `grep -i skill ~/.gemini/GEMINI.md`
+
+### Sub-agents Not Working
+
+If custom sub-agents aren't available:
+
+1. Check experimental flag: `cat ~/.gemini/settings.json | grep enableAgents`
+2. Verify agents directory exists: `ls ~/.gemini/agents/`
+3. Check agent files are markdown: `ls ~/.gemini/agents/*.md`
+4. Restart Gemini CLI session to reload agents
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Cursor" icon="cursor" href="/agents/cursor">
+    Desktop IDE with async sub-agents
+  </Card>
+  <Card title="Skills Reference" icon="book" href="/components/skills">
+    Learn about the 11 curated skills
+  </Card>
+  <Card title="SDD Workflow" icon="diagram-project" href="/components/sdd">
+    Deep dive into Spec-Driven Development
+  </Card>
+  <Card title="MCP Servers" icon="server" href="/components/context7">
+    Explore Model Context Protocol integration
+  </Card>
+</CardGroup>

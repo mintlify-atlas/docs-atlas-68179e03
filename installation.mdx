@@ -1,0 +1,476 @@
+---
+title: Installation
+description: Install Gentle AI on macOS, Linux, or Windows using multiple installation methods
+---
+
+Gentle AI is distributed as a single binary with no runtime dependencies. Choose the installation method that works best for your platform.
+
+## Quick Install
+
+The fastest way to get started is using our installation scripts. These automatically detect your platform, download the latest release, and set up the binary in your PATH.
+
+<CodeGroup>
+
+```bash macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.sh | bash
+```
+
+```powershell Windows
+irm https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.ps1 | iex
+```
+
+</CodeGroup>
+
+<Note>
+The install scripts automatically:
+- Detect your platform (macOS, Linux, Windows) and architecture (amd64, arm64)
+- Download the latest release from GitHub
+- Verify checksums for security
+- Install the binary to a standard location
+- Provide PATH setup instructions if needed
+</Note>
+
+## Installation Methods
+
+<Tabs>
+  <Tab title="Homebrew (macOS/Linux)">
+    <Steps>
+      <Step title="Add the Homebrew tap">
+        ```bash
+        brew tap Gentleman-Programming/homebrew-tap
+        ```
+      </Step>
+      
+      <Step title="Install gentle-ai">
+        ```bash
+        brew install gentle-ai
+        ```
+      </Step>
+      
+      <Step title="Verify installation">
+        ```bash
+        gentle-ai version
+        ```
+        
+        Expected output:
+        ```
+        gentle-ai 1.0.0
+        ```
+      </Step>
+    </Steps>
+    
+    <Note>
+      **Upgrading**: Homebrew handles upgrades automatically. Run `brew upgrade gentle-ai` to get the latest version.
+    </Note>
+  </Tab>
+  
+  <Tab title="Go Install">
+    <Steps>
+      <Step title="Install with Go">
+        Requires Go 1.24 or later.
+        
+        ```bash
+        go install github.com/gentleman-programming/gentle-ai/cmd/gentle-ai@latest
+        ```
+      </Step>
+      
+      <Step title="Verify GOPATH/bin is in PATH">
+        The binary is installed to `$GOPATH/bin` (or `$GOBIN` if set). Ensure this directory is in your PATH:
+        
+        ```bash
+        echo $PATH | grep -q "$(go env GOPATH)/bin" && echo "✓ GOPATH/bin is in PATH" || echo "✗ Add GOPATH/bin to PATH"
+        ```
+        
+        If needed, add this to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
+        
+        ```bash
+        export PATH="$PATH:$(go env GOPATH)/bin"
+        ```
+      </Step>
+      
+      <Step title="Verify installation">
+        ```bash
+        gentle-ai version
+        ```
+      </Step>
+    </Steps>
+    
+    <Warning>
+      The Go module proxy can lag behind new releases by up to 30 minutes. If `@latest` installs an old version, use the installation script or download the binary from GitHub Releases instead.
+    </Warning>
+  </Tab>
+  
+  <Tab title="From GitHub Releases">
+    <Steps>
+      <Step title="Download the binary for your platform">
+        Visit the [Releases page](https://github.com/Gentleman-Programming/gentle-ai/releases) and download the archive for your platform:
+        
+        - **macOS (Apple Silicon)**: `gentle-ai_<VERSION>_darwin_arm64.tar.gz`
+        - **macOS (Intel)**: `gentle-ai_<VERSION>_darwin_amd64.tar.gz`
+        - **Linux (x86_64)**: `gentle-ai_<VERSION>_linux_amd64.tar.gz`
+        - **Linux (ARM64)**: `gentle-ai_<VERSION>_linux_arm64.tar.gz`
+        - **Windows (x86_64)**: `gentle-ai_<VERSION>_windows_amd64.zip`
+        - **Windows (ARM64)**: `gentle-ai_<VERSION>_windows_arm64.zip`
+      </Step>
+      
+      <Step title="Verify the checksum (recommended)">
+        Download `checksums.txt` from the same release and verify the archive:
+        
+        ```bash
+        # macOS / Linux
+        sha256sum -c checksums.txt --ignore-missing
+        
+        # macOS alternative
+        shasum -a 256 -c checksums.txt --ignore-missing
+        ```
+        
+        ```powershell
+        # Windows PowerShell
+        $expected = (Get-Content checksums.txt | Select-String "gentle-ai_.*_windows_amd64.zip").Line.Split()[0]
+        $actual = (Get-FileHash .\gentle-ai_*_windows_amd64.zip -Algorithm SHA256).Hash.ToLower()
+        if ($actual -eq $expected) { Write-Host "✓ Checksum verified" -ForegroundColor Green } else { Write-Host "✗ Checksum mismatch" -ForegroundColor Red }
+        ```
+      </Step>
+      
+      <Step title="Extract and install">
+        <CodeGroup>
+        ```bash macOS / Linux
+        # Extract the archive
+        tar -xzf gentle-ai_*_darwin_arm64.tar.gz
+        
+        # Move to a directory in your PATH
+        sudo mv gentle-ai /usr/local/bin/
+        
+        # Or to a user-writable location
+        mkdir -p ~/.local/bin
+        mv gentle-ai ~/.local/bin/
+        export PATH="$PATH:$HOME/.local/bin"
+        ```
+        
+        ```powershell Windows
+        # Extract the archive (built-in Windows 10+)
+        Expand-Archive -Path .\gentle-ai_*_windows_amd64.zip -DestinationPath .
+        
+        # Move to a directory in your PATH
+        $installDir = "$env:LOCALAPPDATA\gentle-ai\bin"
+        New-Item -ItemType Directory -Path $installDir -Force
+        Move-Item -Path .\gentle-ai.exe -Destination $installDir -Force
+        
+        # Add to PATH (run as Administrator or current user)
+        [Environment]::SetEnvironmentVariable('PATH', $env:PATH + ";$installDir", 'User')
+        ```
+        </CodeGroup>
+      </Step>
+      
+      <Step title="Verify installation">
+        Restart your terminal, then run:
+        
+        ```bash
+        gentle-ai version
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="Manual Script Download">
+    If you prefer to inspect the installation script before running it:
+    
+    <Steps>
+      <Step title="Download the script">
+        <CodeGroup>
+        ```bash macOS / Linux
+        curl -sLO https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.sh
+        ```
+        
+        ```powershell Windows
+        Invoke-WebRequest -Uri https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.ps1 -OutFile install.ps1
+        ```
+        </CodeGroup>
+      </Step>
+      
+      <Step title="Review the script">
+        Open the script in your editor and review its contents.
+      </Step>
+      
+      <Step title="Run the script">
+        <CodeGroup>
+        ```bash macOS / Linux
+        chmod +x install.sh
+        ./install.sh
+        ```
+        
+        ```powershell Windows
+        .\install.ps1
+        ```
+        </CodeGroup>
+      </Step>
+    </Steps>
+    
+    ### Script Options
+    
+    The installation scripts support several options:
+    
+    ```bash macOS / Linux
+    # Force a specific install method
+    ./install.sh --method brew
+    ./install.sh --method go
+    ./install.sh --method binary
+    
+    # Custom install directory (binary method only)
+    ./install.sh --method binary --dir $HOME/.local/bin
+    
+    # Show help
+    ./install.sh --help
+    ```
+    
+    ```powershell Windows
+    # Force a specific install method
+    .\install.ps1 -Method go
+    .\install.ps1 -Method binary
+    
+    # Custom install directory
+    .\install.ps1 -Method binary -InstallDir "$env:USERPROFILE\.local\bin"
+    ```
+  </Tab>
+</Tabs>
+
+## Prerequisites
+
+Gentle AI automatically checks for required dependencies before installation. The following tools are required:
+
+<CardGroup cols={2}>
+  <Card title="Git" icon="git-alt">
+    Used for repository operations and dependency installation.
+    
+    **Install**:
+    - macOS: `brew install git`
+    - Ubuntu/Debian: `sudo apt install git`
+    - Arch: `sudo pacman -S git`
+    - Windows: `winget install Git.Git`
+  </Card>
+  
+  <Card title="curl" icon="download">
+    Required for downloading releases and dependencies.
+    
+    **Pre-installed** on macOS, Windows 10+, and most Linux distributions.
+  </Card>
+  
+  <Card title="Node.js & npm" icon="node-js">
+    Required for MCP server dependencies (Context7).
+    
+    **Install**:
+    - macOS: `brew install node`
+    - Ubuntu/Debian: `sudo apt install nodejs npm`
+    - Arch: `sudo pacman -S nodejs npm`
+    - Windows: `winget install OpenJS.NodeJS`
+  </Card>
+  
+  <Card title="Go (optional)" icon="code">
+    Only needed if using `go install` method or building from source.
+    
+    Requires **Go 1.24+**.
+  </Card>
+</CardGroup>
+
+<Note>
+The interactive TUI will display missing dependencies with platform-specific installation commands when you run `gentle-ai` for the first time.
+</Note>
+
+## Supported Platforms
+
+| Platform | Architecture | Package Manager | Status |
+|----------|-------------|-----------------|--------|
+| macOS (Apple Silicon) | arm64 | Homebrew | ✅ Supported |
+| macOS (Intel) | amd64 | Homebrew | ✅ Supported |
+| Linux (Ubuntu/Debian) | amd64, arm64 | apt | ✅ Supported |
+| Linux (Arch) | amd64, arm64 | pacman | ✅ Supported |
+| Windows 10/11 | amd64, arm64 | winget | ✅ Supported |
+
+<Note>
+**Linux derivatives** (Linux Mint, Pop!_OS, Manjaro, EndeavourOS, etc.) are automatically detected via `ID_LIKE` in `/etc/os-release`.
+</Note>
+
+## Verify Installation
+
+After installation, verify that `gentle-ai` is available:
+
+```bash
+gentle-ai version
+```
+
+Expected output:
+```
+gentle-ai 1.0.0
+```
+
+If the command is not found, ensure the installation directory is in your PATH:
+
+<Tabs>
+  <Tab title="macOS / Linux">
+    Common installation locations:
+    - Homebrew: `/usr/local/bin/gentle-ai` (Intel) or `/opt/homebrew/bin/gentle-ai` (Apple Silicon)
+    - Go install: `$(go env GOPATH)/bin/gentle-ai`
+    - Manual: `~/.local/bin/gentle-ai`
+    
+    Add to PATH if needed:
+    ```bash
+    # Add to ~/.bashrc, ~/.zshrc, or ~/.config/fish/config.fish
+    export PATH="$PATH:$HOME/.local/bin"
+    ```
+  </Tab>
+  
+  <Tab title="Windows">
+    Common installation locations:
+    - Binary install: `%LOCALAPPDATA%\gentle-ai\bin\gentle-ai.exe`
+    - Go install: `%USERPROFILE%\go\bin\gentle-ai.exe`
+    
+    Add to PATH permanently:
+    ```powershell
+    $installDir = "$env:LOCALAPPDATA\gentle-ai\bin"
+    [Environment]::SetEnvironmentVariable('PATH', $env:PATH + ";$installDir", 'User')
+    ```
+    
+    <Note>Restart your terminal after modifying PATH.</Note>
+  </Tab>
+</Tabs>
+
+## Windows Security Note
+
+Some antivirus products may flag unsigned Go binaries heuristically. This is a false positive — the binary is safe.
+
+To verify authenticity, compare the SHA256 hash with `checksums.txt` from the release:
+
+```powershell
+Get-FileHash .\gentle-ai.exe -Algorithm SHA256
+```
+
+The hash should match the entry in `checksums.txt` for your platform.
+
+## Updating
+
+<Tabs>
+  <Tab title="Homebrew">
+    ```bash
+    brew upgrade gentle-ai
+    ```
+  </Tab>
+  
+  <Tab title="Go Install">
+    ```bash
+    go install github.com/gentleman-programming/gentle-ai/cmd/gentle-ai@latest
+    ```
+  </Tab>
+  
+  <Tab title="Installation Script">
+    Re-run the installation script — it will detect the existing installation and upgrade:
+    
+    ```bash macOS / Linux
+    curl -fsSL https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.sh | bash
+    ```
+    
+    ```powershell Windows
+    irm https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.ps1 | iex
+    ```
+  </Tab>
+  
+  <Tab title="Manual">
+    Download the latest release from GitHub and replace the existing binary.
+  </Tab>
+</Tabs>
+
+### Check for Updates
+
+Gentle AI can check for updates automatically:
+
+```bash
+gentle-ai update
+```
+
+This compares your installed version with the latest GitHub release and provides update instructions if a new version is available.
+
+## Uninstalling
+
+<Tabs>
+  <Tab title="Homebrew">
+    ```bash
+    brew uninstall gentle-ai
+    brew untap Gentleman-Programming/homebrew-tap
+    ```
+  </Tab>
+  
+  <Tab title="Go Install">
+    ```bash
+    rm $(go env GOPATH)/bin/gentle-ai
+    ```
+  </Tab>
+  
+  <Tab title="Manual">
+    Remove the binary from your installation directory:
+    
+    ```bash macOS / Linux
+    sudo rm /usr/local/bin/gentle-ai
+    # or
+    rm ~/.local/bin/gentle-ai
+    ```
+    
+    ```powershell Windows
+    Remove-Item "$env:LOCALAPPDATA\gentle-ai\bin\gentle-ai.exe"
+    ```
+  </Tab>
+</Tabs>
+
+To remove all configuration files and backups:
+
+```bash
+rm -rf ~/.gentle-ai
+```
+
+<Warning>
+This will delete all backups created by Gentle AI. Agent configurations (in `~/.claude`, `~/.config/opencode`, etc.) will remain intact.
+</Warning>
+
+## Troubleshooting
+
+### "command not found: gentle-ai"
+
+The installation directory is not in your PATH. See [Verify Installation](#verify-installation) for PATH setup instructions.
+
+### Homebrew tap not found
+
+Ensure you've added the tap before installing:
+```bash
+brew tap Gentleman-Programming/homebrew-tap
+```
+
+### "go: version too old" with go install
+
+Gentle AI requires Go 1.24 or later. Update Go:
+```bash
+# macOS
+brew upgrade go
+
+# Linux (download from golang.org)
+curl -LO https://go.dev/dl/go1.24.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.24.linux-amd64.tar.gz
+```
+
+### Windows antivirus blocking the binary
+
+This is a false positive. Verify the checksum matches the release, then add an exception in your antivirus software.
+
+### "Permission denied" when installing
+
+On macOS/Linux, use `sudo` if installing to `/usr/local/bin`, or choose a user-writable directory like `~/.local/bin`.
+
+## Next Steps
+
+Once installed, proceed to the [Quickstart](/quickstart) guide to configure your first AI agent.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get started in 5 minutes
+  </Card>
+  <Card title="Core Concepts" icon="book" href="/concepts/overview">
+    Understand agents, components, and skills
+  </Card>
+</CardGroup>

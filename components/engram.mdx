@@ -1,0 +1,160 @@
+---
+title: "Engram"
+description: "Persistent cross-session memory for AI agents"
+icon: "brain"
+---
+
+Engram provides persistent memory that survives across sessions and context compactions. Your AI agent can recall decisions, conventions, bug fixes, and discoveries from previous conversations.
+
+## What it does
+
+Engram is an MCP server that gives your AI agent:
+- **Cross-session memory**: Recall past decisions, conventions, and discoveries
+- **Proactive saving**: Agent automatically saves important decisions without being asked
+- **Full-text search**: Find past work by keywords
+- **Topic-based updates**: Upsert memory on evolving topics instead of creating duplicates
+- **Session summaries**: Persist context before and after compactions
+
+## Installation
+
+Engram is installed as:
+1. **MCP server configuration** - Added to your agent's MCP config
+2. **System prompt protocol** - Injected into agent's system prompt with usage rules
+
+### What gets configured
+
+<Info>
+The exact file paths depend on which agent you're configuring (Claude Code, OpenCode, Gemini CLI, etc.).
+</Info>
+
+**MCP Server Config**
+- Claude Code: `~/.claude/mcp-servers/engram.json`
+- OpenCode: `~/.config/opencode/opencode.json` (merged into `mcp` section)
+- Gemini CLI: `~/.gemini/settings.json` (merged into `mcpServers`)
+- Cursor: `~/.cursor/mcp.json` (merged)
+- VS Code Copilot: `%APPDATA%/Code/User/mcp.json` (merged)
+
+**System Prompt**
+- Protocol instructions added to agent's system prompt file
+- Teaches agent when and how to save memories
+
+## How it works
+
+### Automatic memory triggers
+
+Your agent will automatically save to memory after:
+- Making architecture or design decisions
+- Fixing bugs (includes root cause)
+- Learning project conventions
+- Discovering non-obvious patterns or gotchas
+- Establishing workflows or tooling choices
+
+### Memory format
+
+Each memory includes:
+- **title**: Short, searchable summary
+- **type**: `bugfix`, `decision`, `architecture`, `discovery`, `pattern`, `config`, `preference`
+- **scope**: `project` or `personal`
+- **topic_key**: Stable key for updates (e.g., `architecture/auth-model`)
+- **content**: What was done, why, where (files), and what was learned
+
+### Session summaries
+
+At the end of each session, the agent creates a structured summary:
+- **Goal**: What was being worked on
+- **Instructions**: User preferences or constraints
+- **Discoveries**: Technical findings and gotchas
+- **Accomplished**: Completed work with details
+- **Next Steps**: What remains to be done
+- **Relevant Files**: Changed files and their purpose
+
+## Example workflow
+
+```typescript
+// User: "Why did we choose Zustand over Redux?"
+// Agent searches Engram and finds:
+
+{
+  title: "Chose Zustand over Redux for state management",
+  type: "decision",
+  project: "my-app",
+  content: `
+What: Switched from Redux to Zustand for global state
+Why: Simpler API, less boilerplate, better TypeScript support
+Where: src/store/, removed redux-toolkit dependency
+Learned: Zustand's middleware pattern cleaner than Redux middleware
+  `
+}
+```
+
+## Configuration example
+
+<CodeGroup>
+
+```json Claude Code
+// ~/.claude/mcp-servers/engram.json
+{
+  "command": "engram",
+  "args": []
+}
+```
+
+```json OpenCode
+// ~/.config/opencode/opencode.json
+{
+  "mcp": {
+    "engram": {
+      "command": ["engram", "mcp"],
+      "enabled": true,
+      "type": "local"
+    }
+  }
+}
+```
+
+```json Gemini CLI
+// ~/.gemini/settings.json
+{
+  "mcpServers": {
+    "engram": {
+      "command": "engram",
+      "args": []
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+## Searching memory
+
+Your agent automatically searches when you:
+- Ask to recall something: "What did we do last time?"
+- Reference past work: "How did we solve that bug?"
+- Start work that might have been done before
+
+### Search commands used by agent
+
+- `mem_context`: Check recent session history (fast)
+- `mem_search`: Full-text search across all memories
+- `mem_get_observation`: Retrieve full untruncated content
+- `mem_suggest_topic_key`: Get consistent topic key for updates
+
+## Post-compaction recovery
+
+<Warning>
+When context compaction happens, the agent must immediately call `mem_session_summary` to persist what was done before compaction, then call `mem_context` to recover prior context.
+</Warning>
+
+The Engram protocol in the system prompt includes mandatory instructions for handling compaction.
+
+## Related components
+
+<CardGroup cols={2}>
+<Card title="SDD" icon="diagram-project" href="/components/sdd">
+  Spec-Driven Development workflow
+</Card>
+<Card title="Skills" icon="book" href="/components/skills">
+  Curated coding skill library
+</Card>
+</CardGroup>

@@ -1,0 +1,384 @@
+---
+title: "Skills"
+description: "Curated coding skill library for AI agents"
+icon: "book"
+---
+
+Skills are specialized instruction sets that teach your AI agent domain-specific patterns, conventions, and workflows. Each skill is a markdown file that gets loaded when the agent detects a matching context.
+
+## What it does
+
+Skills provide:
+- **Context-triggered loading**: Agent detects when a skill applies
+- **Pattern libraries**: Proven patterns for common tasks
+- **Convention enforcement**: Consistent code style and structure
+- **Workflow guidance**: Step-by-step execution templates
+- **Real examples**: Copy-paste starting points
+
+## Installation
+
+Skills are installed as:
+- Individual `SKILL.md` files written to your agent's skills directory
+- Organized in subdirectories by skill name
+- Auto-detected by agents that support the skills protocol
+
+### What gets configured
+
+<Info>
+Skills directory location depends on which agent you're configuring.
+</Info>
+
+- Claude Code: `~/.claude/skills/{skill-name}/SKILL.md`
+- OpenCode: `~/.config/opencode/skills/{skill-name}/SKILL.md`
+- Gemini CLI: `~/.gemini/agents/{skill-name}.md`
+- Cursor: `~/.cursor/skills/{skill-name}/SKILL.md`
+- VS Code Copilot: `~/.copilot/skills/{skill-name}/SKILL.md`
+
+## Available skills
+
+### SDD Skills (9 skills)
+
+<Note>
+SDD skills are automatically installed when you install the **SDD component**. You don't need to select them individually.
+</Note>
+
+<CardGroup cols={2}>
+<Card title="sdd-init" icon="flag">
+Bootstrap SDD context in a project
+
+**Trigger**: User says "sdd init" or "initialize sdd"
+
+**What it does**:
+- Detects tech stack from package.json, go.mod, etc.
+- Identifies conventions (linters, test frameworks)
+- Bootstraps persistence backend (Engram or OpenSpec)
+</Card>
+
+<Card title="sdd-explore" icon="magnifying-glass">
+Investigate codebase before committing to a change
+
+**Trigger**: User wants to explore before implementing
+
+**What it does**:
+- Searches for relevant patterns
+- Maps dependencies
+- Identifies technical constraints
+</Card>
+
+<Card title="sdd-propose" icon="lightbulb">
+Create change proposal with intent, scope, approach
+
+**Trigger**: User requests a new feature or refactor
+
+**What it does**:
+- Documents intent and motivation
+- Defines scope and boundaries
+- Proposes technical approach with tradeoffs
+</Card>
+
+<Card title="sdd-spec" icon="file-lines">
+Write specifications with requirements and scenarios
+
+**Trigger**: After proposal is approved
+
+**What it does**:
+- Defines functional requirements
+- Lists edge cases and scenarios
+- Sets acceptance criteria
+</Card>
+
+<Card title="sdd-design" icon="drafting-compass">
+Technical design with architecture decisions
+
+**Trigger**: After proposal is approved
+
+**What it does**:
+- Designs component architecture
+- Defines data models
+- Documents integration points
+</Card>
+
+<Card title="sdd-tasks" icon="list-check">
+Break down a change into implementation tasks
+
+**Trigger**: After specs and design are done
+
+**What it does**:
+- Creates ordered task list
+- Identifies dependencies
+- Estimates complexity
+</Card>
+
+<Card title="sdd-apply" icon="code">
+Implement tasks following specs and design
+
+**Trigger**: User says "implement" or "apply tasks"
+
+**What it does**:
+- Executes tasks in dependency order
+- Saves progress checkpoints
+- Follows specs and design exactly
+</Card>
+
+<Card title="sdd-verify" icon="check">
+Validate implementation matches specs
+
+**Trigger**: After implementation is complete
+
+**What it does**:
+- Checks all requirements implemented
+- Runs tests
+- Validates edge cases
+</Card>
+
+<Card title="sdd-archive" icon="box-archive">
+Sync delta specs to main specs and archive
+
+**Trigger**: After verification passes
+
+**What it does**:
+- Updates main specifications
+- Archives change artifacts
+- Creates completion summary
+</Card>
+</CardGroup>
+
+### Foundation Skills (2 skills)
+
+<CardGroup cols={2}>
+<Card title="go-testing" icon="flask">
+Go testing patterns including Bubbletea TUI testing
+
+**Trigger**: Writing Go tests, using teatest, adding coverage
+
+**Patterns included**:
+- Table-driven tests
+- Bubbletea TUI testing with `teatest`
+- Golden file testing
+- Test helpers and fixtures
+- Integration test patterns
+
+**Example**:
+```go
+func TestTUI(t *testing.T) {
+    tm := teatest.NewTestModel(
+        t, NewModel(),
+        teatest.WithInitialTermSize(300, 100),
+    )
+    
+    tm.Send(tea.KeyMsg{
+        Type: tea.KeyEnter,
+    })
+    
+    teatest.WaitFor(
+        t, tm.Output(),
+        func(bts []byte) bool {
+            return bytes.Contains(bts, []byte("Success"))
+        },
+    )
+}
+```
+</Card>
+
+<Card title="skill-creator" icon="wand-magic-sparkles">
+Create new AI agent skills following the Agent Skills spec
+
+**Trigger**: User wants to create a custom skill
+
+**What it creates**:
+- Proper YAML frontmatter
+- Structured sections (Purpose, Patterns, Examples)
+- Trigger conditions
+- Real code examples
+- Anti-patterns and gotchas
+
+**Template structure**:
+```markdown
+---
+name: skill-name
+description: What this skill does
+license: MIT
+metadata:
+  author: your-name
+  version: "1.0"
+---
+
+## When to Use
+[Trigger conditions]
+
+## Critical Patterns
+[Pattern examples with code]
+
+## Anti-Patterns
+[What NOT to do]
+```
+</Card>
+</CardGroup>
+
+## Skill file structure
+
+Every skill follows this format:
+
+```markdown
+---
+name: skill-id
+description: One-line summary. Trigger conditions.
+license: MIT
+metadata:
+  author: gentleman-programming
+  version: "1.0"
+---
+
+## When to Use
+
+Use this skill when:
+- [Specific context or trigger]
+- [File pattern or task type]
+
+## Critical Patterns
+
+### Pattern 1: Name
+
+[Description]
+
+```language
+[Code example]
+```
+
+### Pattern 2: Name
+
+[Description]
+
+## Anti-Patterns
+
+- [What to avoid and why]
+
+## Examples
+
+### Example 1
+
+[Real-world usage]
+```
+
+## How agents use skills
+
+### Auto-detection
+
+Agents check for trigger conditions:
+- File extensions (`.go`, `.ts`, `.py`)
+- User intent keywords ("test", "refactor", "sdd init")
+- Framework imports (React, Angular, Bubbletea)
+- Task context (writing tests, creating components)
+
+### Loading sequence
+
+1. Agent detects matching context
+2. Loads skill file from skills directory
+3. Follows patterns and conventions in the skill
+4. Applies patterns to current task
+
+### Multiple skills
+
+Multiple skills can apply simultaneously:
+
+```typescript
+// Context: Writing React tests
+// Skills loaded:
+// - react-testing
+// - vitest-patterns
+// - skill-creator (if creating new test helpers)
+```
+
+## Custom skills
+
+You can create custom skills for your team:
+
+<Steps>
+<Step title="Use the skill-creator skill">
+Ask your agent to create a new skill:
+
+```bash
+"Create a skill for our React component architecture pattern"
+```
+</Step>
+
+<Step title="Define trigger conditions">
+Specify when the skill should load:
+
+```yaml
+---
+name: my-react-patterns
+description: >
+  Custom React patterns for our team.
+  Trigger: Creating React components in src/components/
+---
+```
+</Step>
+
+<Step title="Document patterns">
+Add your team's patterns with examples:
+
+```markdown
+## Critical Patterns
+
+### Pattern 1: Component structure
+
+All components follow this structure:
+- props.ts - TypeScript interfaces
+- Component.tsx - Main component
+- Component.test.tsx - Tests
+- index.ts - Public exports
+```
+</Step>
+
+<Step title="Save to skills directory">
+Write the skill file:
+
+```bash
+~/.config/opencode/skills/my-react-patterns/SKILL.md
+```
+</Step>
+</Steps>
+
+## Skill presets
+
+Gentle AI presets include different skill sets:
+
+| Preset | SDD Skills | Foundation Skills |
+|--------|------------|-------------------|
+| **Full Gentleman** | All 9 | go-testing, skill-creator |
+| **Ecosystem Only** | All 9 | go-testing, skill-creator |
+| **Minimal** | None | None |
+| **Custom** | You choose | You choose |
+
+## Configuration example
+
+Skills are installed as files, no JSON config needed:
+
+```bash
+# Typical skills directory structure
+~/.config/opencode/skills/
+├── go-testing/
+│   └── SKILL.md
+├── skill-creator/
+│   └── SKILL.md
+├── sdd-init/
+│   └── SKILL.md
+├── sdd-apply/
+│   └── SKILL.md
+└── _shared/
+    ├── persistence-contract.md
+    ├── engram-convention.md
+    └── openspec-convention.md
+```
+
+## Related components
+
+<CardGroup cols={2}>
+<Card title="SDD" icon="diagram-project" href="/components/sdd">
+  Spec-Driven Development workflow
+</Card>
+<Card title="Persona" icon="user-tie" href="/components/persona">
+  Behavior mode configuration
+</Card>
+</CardGroup>

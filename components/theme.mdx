@@ -1,0 +1,272 @@
+---
+title: "Theme"
+description: "Gentleman Kanagawa theme overlay for AI agent UIs"
+icon: "palette"
+---
+
+The Theme component applies the Gentleman Kanagawa color scheme to your AI agent's UI. It's a dark, low-contrast theme inspired by the traditional Japanese Kanagawa wave, designed for long coding sessions.
+
+## What it does
+
+Theme configuration:
+- **UI color scheme**: Applies Gentleman Kanagawa colors to agent interface
+- **Settings merge**: Adds `"theme": "gentleman-kanagawa"` to agent config
+- **Agent-specific**: Only works with agents that support custom themes
+
+<Info>
+Theme support varies by agent. Some agents (like Claude Code, OpenCode) support custom themes via settings, while others use system themes.
+</Info>
+
+## Installation
+
+Theme installs by merging a theme setting into your agent's config file:
+
+```json
+{
+  "theme": "gentleman-kanagawa"
+}
+```
+
+### What gets configured
+
+**Config File**
+- Claude Code: `~/.claude/settings.json`
+- OpenCode: `~/.config/opencode/opencode.json`
+- Gemini CLI: `~/.gemini/settings.json`
+- Other agents: No-op (theme not supported or uses system theme)
+
+## Gentleman Kanagawa colors
+
+The Gentleman Kanagawa theme is a dark, muted color palette:
+
+### Base colors
+
+| Element | Color | Hex |
+|---------|-------|-----|
+| Background | Deepest wave | `#1F1F28` |
+| Surface | Dark wave | `#2A2A37` |
+| Surface variant | Wave crest | `#363646` |
+| Text | Soft white | `#DCD7BA` |
+| Text secondary | Muted white | `#C8C093` |
+
+### Accent colors
+
+| Element | Color | Hex |
+|---------|-------|-----|
+| Primary | Wave blue | `#7E9CD8` |
+| Secondary | Autumn red | `#E82424` |
+| Success | Spring green | `#98BB6C` |
+| Warning | Sunset orange | `#FF9E3B` |
+| Error | Cherry blossom | `#E82424` |
+
+### Syntax highlighting
+
+| Token | Color | Hex |
+|-------|-------|-----|
+| Keywords | Wave blue | `#7E9CD8` |
+| Strings | Spring green | `#98BB6C` |
+| Numbers | Sakura pink | `#D27E99` |
+| Comments | Muted gray | `#727169` |
+| Functions | Autumn yellow | `#E6C384` |
+| Variables | Soft white | `#DCD7BA` |
+
+## Agent support
+
+<Tabs>
+<Tab title="Claude Code">
+### Claude Code Theme
+
+Claude Code supports custom themes via `settings.json`.
+
+**Config**:
+```json
+// ~/.claude/settings.json
+{
+  "theme": "gentleman-kanagawa"
+}
+```
+
+**Result**: Claude Code UI uses Gentleman Kanagawa colors for:
+- Editor background and text
+- Sidebar and panels
+- Syntax highlighting
+- Terminal colors
+
+</Tab>
+
+<Tab title="OpenCode">
+### OpenCode Theme
+
+OpenCode supports custom themes via `opencode.json`.
+
+**Config**:
+```json
+// ~/.config/opencode/opencode.json
+{
+  "theme": "gentleman-kanagawa"
+}
+```
+
+**Result**: OpenCode TUI uses Gentleman Kanagawa colors for:
+- Terminal background
+- Text and prompts
+- Bubbletea UI components
+- Status line
+
+</Tab>
+
+<Tab title="Other Agents">
+### Gemini CLI, Cursor, VS Code Copilot
+
+<Note>
+These agents either don't support custom themes via config, or they inherit the theme from their host environment (VS Code, Cursor IDE).
+</Note>
+
+Gentle AI still merges the `theme` setting into config files for forward compatibility, but it has no effect currently.
+
+**Workaround for VS Code Copilot**:
+
+Install a Kanagawa theme extension for VS Code:
+
+```bash
+code --install-extension qufiwefefwoyn.kanagawa
+```
+
+Then select it in VS Code settings:
+
+```json
+// VS Code settings.json
+{
+  "workbench.colorTheme": "Kanagawa"
+}
+```
+
+</Tab>
+</Tabs>
+
+## Why Kanagawa?
+
+The Kanagawa color palette is designed for:
+
+<CardGroup cols={2}>
+<Card title="Low contrast" icon="eye">
+Reduces eye strain during long coding sessions.
+
+**Feature**: Muted colors, no harsh whites or bright blues.
+</Card>
+
+<Card title="Distinct syntax" icon="code">
+Clear syntax highlighting without being distracting.
+
+**Feature**: Each token type has a unique, readable color.
+</Card>
+
+<Card title="Dark mode first" icon="moon">
+Optimized for dark environments and night work.
+
+**Feature**: Deep background, soft foreground, no light mode variant.
+</Card>
+
+<Card title="Aesthetic consistency" icon="palette">
+Inspired by traditional Japanese art (The Great Wave off Kanagawa).
+
+**Feature**: Cohesive color story, not random accent colors.
+</Card>
+</CardGroup>
+
+## Configuration example
+
+```json
+// ~/.config/opencode/opencode.json
+{
+  "theme": "gentleman-kanagawa",
+  "agent": {
+    "gentleman": {
+      "mode": "primary",
+      "description": "Senior Architect mentor",
+      "prompt": "{file:./AGENTS.md}"
+    }
+  }
+}
+```
+
+## Customizing colors
+
+If you want to tweak the Kanagawa palette:
+
+<Steps>
+<Step title="Check agent's theme support">
+Verify your agent supports custom themes and where theme files are stored.
+
+```bash
+# Example: OpenCode themes
+ls ~/.config/opencode/themes/
+```
+</Step>
+
+<Step title="Copy Gentleman Kanagawa theme">
+Create a custom variant:
+
+```bash
+cp ~/.config/opencode/themes/gentleman-kanagawa.json \
+   ~/.config/opencode/themes/my-kanagawa.json
+```
+</Step>
+
+<Step title="Edit colors">
+Modify the JSON color values:
+
+```json
+{
+  "name": "My Kanagawa",
+  "colors": {
+    "background": "#1F1F28",
+    "foreground": "#DCD7BA",
+    "primary": "#7E9CD8",
+    // ... your custom colors
+  }
+}
+```
+</Step>
+
+<Step title="Apply custom theme">
+Update your settings:
+
+```json
+{
+  "theme": "my-kanagawa"
+}
+```
+</Step>
+</Steps>
+
+## Disabling theme
+
+To remove the Gentleman Kanagawa theme:
+
+```json
+// Remove or change theme key
+{
+  "theme": "default"  // or remove the key entirely
+}
+```
+
+Agent will revert to its default theme.
+
+## Theme + Persona combination
+
+Gentleman Kanagawa theme pairs well with the Gentleman persona:
+- **Visual consistency**: Dark, focused UI matches no-BS teaching style
+- **Low distraction**: Muted colors keep focus on code and concepts
+- **Professional aesthetic**: Reflects the "senior architect" persona
+
+## Related components
+
+<CardGroup cols={2}>
+<Card title="Persona" icon="user-tie" href="/components/persona">
+  Behavior mode configuration
+</Card>
+<Card title="Permissions" icon="shield" href="/components/permissions">
+  Security-first defaults and guardrails
+</Card>
+</CardGroup>

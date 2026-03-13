@@ -1,0 +1,178 @@
+---
+title: gentle-ai --version
+description: Print the current version of gentle-ai and exit
+---
+
+## Overview
+
+The `gentle-ai --version` command prints the current version of the `gentle-ai` binary and exits. This is useful for verifying your installation, checking for updates, or reporting issues.
+
+## Usage
+
+```bash
+gentle-ai --version
+```
+
+**Aliases**:
+- `gentle-ai version`
+- `gentle-ai -v`
+
+## Examples
+
+### Basic Usage
+
+```bash
+gentle-ai --version
+```
+
+**Output**:
+```
+gentle-ai 1.2.3
+```
+
+### Using Short Flag
+
+```bash
+gentle-ai -v
+```
+
+**Output**:
+```
+gentle-ai 1.2.3
+```
+
+### Using Subcommand
+
+```bash
+gentle-ai version
+```
+
+**Output**:
+```
+gentle-ai 1.2.3
+```
+
+## Version Format
+
+The version follows [Semantic Versioning](https://semver.org/) (semver):
+
+```
+gentle-ai MAJOR.MINOR.PATCH
+```
+
+- **MAJOR**: Incremented for incompatible breaking changes
+- **MINOR**: Incremented for new features that are backward-compatible
+- **PATCH**: Incremented for backward-compatible bug fixes
+
+## Development Builds
+
+If you build `gentle-ai` from source without using GoReleaser, the version will show as `dev`:
+
+```bash
+go run ./cmd/gentle-ai --version
+```
+
+**Output**:
+```
+gentle-ai dev
+```
+
+## Release Builds
+
+Official releases are built with GoReleaser, which injects the version at build time via `-ldflags`:
+
+```bash
+go build -ldflags "-X main.version=1.2.3" ./cmd/gentle-ai
+```
+
+This ensures that binaries downloaded from [GitHub Releases](https://github.com/Gentleman-Programming/gentle-ai/releases) always report the correct version.
+
+## Checking for Updates
+
+To check if a newer version is available, use the `gentle-ai update` command:
+
+```bash
+gentle-ai update
+```
+
+This command:
+- Fetches the latest release version from GitHub
+- Compares it to your current version
+- Shows upgrade instructions if a newer version exists
+
+**Example output when update is available**:
+
+```
+Current version: 1.2.3
+Latest version: 1.3.0
+
+A new version is available!
+
+Upgrade instructions:
+
+macOS (Homebrew):
+  brew update
+  brew upgrade gentle-ai
+
+Go install:
+  go install github.com/gentleman-programming/gentle-ai/cmd/gentle-ai@latest
+
+Manual download:
+  https://github.com/Gentleman-Programming/gentle-ai/releases/tag/v1.3.0
+```
+
+**Example output when up-to-date**:
+
+```
+Current version: 1.3.0
+Latest version: 1.3.0
+
+You are running the latest version.
+```
+
+## Version Information in Code
+
+The version string is defined in `/home/daytona/workspace/source/cmd/gentle-ai/main.go:11`:
+
+```go
+// version is set by GoReleaser via ldflags at build time.
+var version = "dev"
+
+func main() {
+    app.Version = version
+    // ...
+}
+```
+
+The version is then used by the `app.Run()` function in `/home/daytona/workspace/source/internal/app/app.go:54-56`:
+
+```go
+case "version", "--version", "-v":
+    _, _ = fmt.Fprintf(stdout, "gentle-ai %s\\n", Version)
+    return nil
+```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|----------|
+| 0 | Success (version printed) |
+
+The `--version` command always exits with code `0`.
+
+## Related Commands
+
+<CardGroup cols={2}>
+  <Card title="gentle-ai install" icon="download" href="/api/install">
+    Install and configure AI agents
+  </Card>
+  <Card title="gentle-ai update" icon="arrow-up">
+    Check for updates and show upgrade instructions
+  </Card>
+</CardGroup>
+
+## Notes
+
+- The version check does **not** require network access
+- The version is embedded at compile time, not read from a config file
+- `gentle-ai update` (not `--version`) checks for newer releases on GitHub

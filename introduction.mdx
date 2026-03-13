@@ -1,0 +1,128 @@
+---
+title: Introduction
+description: One command to configure any AI coding agent with the Gentleman AI ecosystem — memory, skills, workflow, and MCP tools.
+---
+
+<div className="relative overflow-hidden rounded-lg border border-[#e0e0e0] bg-white p-12 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
+  <div className="mx-auto max-w-4xl text-center">
+    <h1 className="mb-4 font-inter text-5xl font-bold text-[#1a1a1a]">
+      Gentle AI
+    </h1>
+    <p className="mb-8 font-inter text-xl text-[#545454]">
+      One command. Any agent. Any OS. The Gentleman AI ecosystem — configured and ready.
+    </p>
+    <div className="flex flex-wrap justify-center gap-4">
+      <a 
+        href="/quickstart" 
+        className="inline-flex items-center rounded-md bg-[#94cb04] px-6 py-3 font-inter text-sm font-semibold text-white transition-colors hover:bg-[#7da903]"
+      >
+        Get Started
+      </a>
+      <a 
+        href="https://github.com/Gentleman-Programming/gentle-ai" 
+        className="inline-flex items-center rounded-md border border-[#e0e0e0] bg-transparent px-6 py-3 font-inter text-sm font-semibold text-[#1a1a1a] transition-colors hover:bg-[#f5f5f5]"
+      >
+        View on GitHub
+      </a>
+    </div>
+  </div>
+</div>
+
+## What is Gentle AI?
+
+Gentle AI is **not** an AI agent installer. Most agents are easy to install. This is an **ecosystem configurator** — it takes whatever AI coding agent(s) you use and supercharges them with the Gentleman stack.
+
+**Before**: "I installed Claude Code / OpenCode / Cursor, but it's just a chatbot that writes code."
+
+**After**: Your agent now has memory, skills, workflow, MCP tools, and a persona that actually teaches you.
+
+<CardGroup cols={2}>
+  <Card title="Multi-Agent Support" icon="robot">
+    Configure Claude Code, OpenCode, Gemini CLI, Cursor, and VS Code Copilot with one tool
+  </Card>
+  <Card title="8 Core Components" icon="cube">
+    Engram, SDD, Skills, Context7, Persona, Permissions, GGA, and Theme
+  </Card>
+  <Card title="Cross-Platform" icon="computer">
+    Works on macOS, Linux, and Windows with automatic dependency detection
+  </Card>
+  <Card title="Interactive TUI" icon="terminal">
+    Beautiful Bubbletea interface guides you through every step
+  </Card>
+</CardGroup>
+
+## The Gentleman Stack
+
+Gentle AI installs and configures these ecosystem components for your AI agents:
+
+- **Engram** — Persistent cross-session memory
+- **SDD** — Spec-Driven Development workflow (plan before you code)
+- **Skills** — 11 curated coding skills including 9-phase SDD workflow
+- **MCP servers** — Context7 for real-time library documentation
+- **GGA** — Gentleman Guardian Angel AI provider switcher
+- **Persona & config** — Security-first permissions, teaching-oriented persona, themes
+
+## Supported Agents
+
+| Agent | Skills | MCP | Sub-agents | Output Styles | Slash Commands |
+|-------|--------|-----|------------|---------------|----------------|
+| Claude Code | ✓ | ✓ | ✓ | ✓ | — |
+| OpenCode | ✓ | ✓ | ✓ | — | ✓ |
+| Gemini CLI | ✓ | ✓ | ✓ (experimental) | — | — |
+| Cursor | ✓ | ✓ | ✓ | — | — |
+| VS Code Copilot | ✓ | ✓ | ✓ | — | — |
+
+All agents receive the **full SDD orchestrator** (agent-teams-lite) injected into their system prompt, plus skill files written to their skills directory.
+
+## Why Gentle AI?
+
+Installing an AI agent is the **easy** part. Making it actually useful is where everyone fails.
+
+A raw AI agent out of the box is like a sports car with no tuning — it runs, but it's nowhere near its potential. To get real value you need:
+
+1. **Persistent memory** so the agent remembers decisions, bugs, and conventions across sessions
+2. **MCP servers** so the agent can access real documentation and project management tools
+3. **Coding skills** — curated best-practice patterns for modern development
+4. **SDD workflow** so the agent plans before coding, not the other way around
+5. **Proper permissions & security** — block `.env` access, require confirmation on destructive git operations
+6. **A persona that teaches, not just completes** — an agent that pushes back on bad practices and explains the WHY
+
+Most developers either:
+- Use their AI agent with default config (10% of its potential)
+- Spend **days** manually configuring one agent, then can't replicate it on another machine or tool
+- Never set up memory, MCP, or skills because the setup is fragmented across 5 different repos
+
+**Gentle AI eliminates that gap entirely.** You pick your agent(s), you pick your config level, and the entire Gentleman AI ecosystem gets injected into your tools — ready to go.
+
+## Quick Start
+
+<CodeGroup>
+
+```bash macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.sh | bash
+```
+
+```powershell Windows
+irm https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.ps1 | iex
+```
+
+</CodeGroup>
+
+This downloads the latest release for your platform and launches the interactive TUI. No Go toolchain required.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Gentle AI on your platform
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get started in 5 minutes
+  </Card>
+  <Card title="Core Concepts" icon="book" href="/concepts/overview">
+    Understand agents, components, and skills
+  </Card>
+  <Card title="Components" icon="puzzle-piece" href="/components/engram">
+    Explore the Gentleman ecosystem
+  </Card>
+</CardGroup>

@@ -1,0 +1,446 @@
+---
+title: Agent Adapter Interface
+description: How Gentle AI abstracts agent differences through the Adapter interface
+---
+
+## Overview
+
+Gentle AI uses the **Adapter pattern** to support multiple AI agents without component code needing to know about each agent's specific quirks. Components use adapter methods instead of switch statements on `AgentID`, making it trivial to add new agents.
+
+## The Adapter Interface
+
+All agent adapters implement the `Adapter` interface defined in `/home/daytona/workspace/source/internal/agents/interface.go:20-56`:
+
+```go
+type Adapter interface {
+    // Identity
+    Agent() model.AgentID
+    Tier() model.SupportTier
+
+    // Detection
+    Detect(ctx context.Context, homeDir string) (installed bool, binaryPath string, configPath string, configFound bool, err error)
+
+    // Installation
+    SupportsAutoInstall() bool
+    InstallCommand(profile system.PlatformProfile) ([][]string, error)
+
+    // Config paths
+    GlobalConfigDir(homeDir string) string
+    SystemPromptDir(homeDir string) string
+    SystemPromptFile(homeDir string) string
+    SkillsDir(homeDir string) string
+    SettingsPath(homeDir string) string
+
+    // Config strategies
+    SystemPromptStrategy() model.SystemPromptStrategy
+    MCPStrategy() model.MCPStrategy
+
+    // MCP path resolution
+    MCPConfigPath(homeDir string, serverName string) string
+
+    // Optional capabilities
+    SupportsOutputStyles() bool
+    OutputStyleDir(homeDir string) string
+    SupportsSlashCommands() bool
+    CommandsDir(homeDir string) string
+    SupportsSkills() bool
+    SupportsSystemPrompt() bool
+    SupportsMCP() bool
+}
+```
+
+## Identity Methods
+
+### `Agent() model.AgentID`
+
+Returns the agent's unique identifier.
+
+**Valid values**:
+- `model.AgentClaudeCode` → `"claude-code"`
+- `model.AgentOpenCode` → `"opencode"`
+- `model.AgentGeminiCLI` → `"gemini-cli"`
+- `model.AgentCursor` → `"cursor"`
+- `model.AgentVSCodeCopilot` → `"vscode-copilot"`
+
+### `Tier() model.SupportTier`
+
+Returns the agent's support tier. Currently all agents return `model.TierFull`.
+
+**Support tier**: All agents receive the full SDD orchestrator, skill files, MCP servers, system prompt injection, and sub-agent delegation.
+
+## Detection Methods
+
+### `Detect(ctx context.Context, homeDir string) (bool, string, string, bool, error)`
+
+Detects whether the agent is installed and where its config directory is located.
+
+**Returns**:
+1. `installed` (bool) — whether the agent binary is on PATH
+2. `binaryPath` (string) — path to the agent binary (if found)
+3. `configPath` (string) — path to the agent's config directory
+4. `configFound` (bool) — whether the config directory exists
+5. `error` — any error encountered during detection
+
+**Example (Claude Code)**:
+
+```go
+func (a *Adapter) Detect(_ context.Context, homeDir string) (bool, string, string, bool, error) {
+    configPath := filepath.Join(homeDir, ".claude")
+
+    binaryPath, err := exec.LookPath("claude")
+    installed := err == nil
+
+    stat, err := os.Stat(configPath)
+    if os.IsNotExist(err) {
+        return installed, binaryPath, configPath, false, nil
+    }
+    if err != nil {
+        return false, "", "", false, err
+    }
+
+    return installed, binaryPath, configPath, stat.IsDir(), nil
+}
+```
+
+## Installation Methods
+
+### `SupportsAutoInstall() bool`
+
+Returns whether the agent can be automatically installed via CLI commands.
+
+**Agents that support auto-install**:
+- Claude Code (npm)
+- OpenCode (npm)
+- Gemini CLI (npm)
+
+**Agents that do NOT support auto-install**:
+- Cursor (desktop app)
+- VS Code Copilot (desktop app)
+
+### `InstallCommand(profile system.PlatformProfile) ([][]string, error)`
+
+Returns a sequence of commands to install the agent.
+
+**Example (OpenCode)**:
+
+```go
+func (a *Adapter) InstallCommand(profile system.PlatformProfile) ([][]string, error) {
+    // OpenCode installs via npm on all platforms
+    if profile.OS == "linux" && !profile.NpmWritable {
+        return [][]string{{"sudo", "npm", "install", "-g", "@opencode/cli"}}, nil
+    }
+    return [][]string{{"npm", "install", "-g", "@opencode/cli"}}, nil
+}
+```
+
+**Example (Cursor — not installable)**:
+
+```go
+func (a *Adapter) InstallCommand(_ system.PlatformProfile) ([][]string, error) {
+    return nil, AgentNotInstallableError{Agent: model.AgentCursor}
+}
+```
+
+## Config Path Methods
+
+### `GlobalConfigDir(homeDir string) string`
+
+Returns the agent's global config directory.
+
+**Examples**:
+- Claude Code: `~/.claude/`
+- OpenCode: `~/.config/opencode/`
+- Gemini CLI: `~/.gemini/`
+- Cursor: `~/.cursor/`
+- VS Code Copilot: `~/.copilot/`
+
+### `SystemPromptDir(homeDir string) string`
+
+Returns the directory where the system prompt file lives.
+
+**Examples**:
+- Claude Code: `~/.claude/` (same as config dir)
+- OpenCode: `~/.config/opencode/` (same as config dir)
+- Cursor: `~/.cursor/rules/` (subdirectory)
+- VS Code Copilot: `~/Library/Application Support/Code/User/prompts/` (separate from skills)
+
+### `SystemPromptFile(homeDir string) string`
+
+Returns the full path to the system prompt file.
+
+**Examples**:
+- Claude Code: `~/.claude/CLAUDE.md`
+- OpenCode: `~/.config/opencode/AGENTS.md`
+- Gemini CLI: `~/.gemini/GEMINI.md`
+- Cursor: `~/.cursor/rules/gentle-ai.mdc`
+- VS Code Copilot: `~/Library/Application Support/Code/User/prompts/gentle-ai.instructions.md`
+
+### `SkillsDir(homeDir string) string`
+
+Returns the directory where skill files are written.
+
+**Examples**:
+- Claude Code: `~/.claude/skills/`
+- OpenCode: `~/.config/opencode/skills/`
+- Gemini CLI: `~/.gemini/skills/`
+- Cursor: `~/.cursor/skills/`
+- VS Code Copilot: `~/.copilot/skills/` (global skills directory)
+
+### `SettingsPath(homeDir string) string`
+
+Returns the path to the agent's settings file (usually JSON).
+
+**Examples**:
+- Claude Code: `~/.claude/settings.json`
+- OpenCode: `~/.config/opencode/opencode.json`
+- Gemini CLI: `~/.gemini/settings.json`
+- Cursor: `~/.cursor/settings.json`
+- VS Code Copilot: `~/Library/Application Support/Code/User/settings.json`
+
+## Config Strategy Methods
+
+### `SystemPromptStrategy() model.SystemPromptStrategy`
+
+Returns the strategy for injecting content into the system prompt file.
+
+**Strategies**:
+
+| Strategy | Description | Agents |
+|----------|-------------|--------|
+| `StrategyMarkdownSections` | Uses `<!-- gentle-ai:ID -->` markers to inject sections without clobbering user content | Claude Code |
+| `StrategyFileReplace` | Replaces the entire system prompt file | OpenCode, Gemini CLI, Cursor |
+| `StrategyInstructionsFile` | Writes a dedicated `.instructions.md` file | VS Code Copilot |
+
+**Example (Claude Code)**:
+
+```go
+func (a *Adapter) SystemPromptStrategy() model.SystemPromptStrategy {
+    return model.StrategyMarkdownSections
+}
+```
+
+### `MCPStrategy() model.MCPStrategy`
+
+Returns the strategy for injecting MCP server configurations.
+
+**Strategies**:
+
+| Strategy | Description | Agents |
+|----------|-------------|--------|
+| `StrategySeparateMCPFiles` | Writes one JSON file per server in a dedicated directory | Claude Code |
+| `StrategyMergeIntoSettings` | Merges `mcpServers` into the agent's settings file | OpenCode, Gemini CLI |
+| `StrategyMCPConfigFile` | Writes to a dedicated `mcp.json` config file | Cursor, VS Code Copilot |
+
+**Example (OpenCode)**:
+
+```go
+func (a *Adapter) MCPStrategy() model.MCPStrategy {
+    return model.StrategyMergeIntoSettings
+}
+```
+
+## MCP Path Methods
+
+### `MCPConfigPath(homeDir string, serverName string) string`
+
+Returns the path where an MCP server config should be written.
+
+**Examples**:
+- Claude Code: `~/.claude/mcp/engram.json` (separate file per server)
+- OpenCode: `~/.config/opencode/opencode.json` (merged into settings)
+- Gemini CLI: `~/.gemini/settings.json` (merged into settings)
+- Cursor: `~/.cursor/mcp.json` (dedicated MCP file)
+- VS Code Copilot: `~/Library/Application Support/Code/User/mcp.json` (dedicated MCP file)
+
+## Optional Capability Methods
+
+### `SupportsOutputStyles() bool`
+
+Returns whether the agent supports custom output styles.
+
+**Only Claude Code returns `true`**.
+
+### `OutputStyleDir(homeDir string) string`
+
+Returns the directory where output style files are written.
+
+**Example (Claude Code)**:
+
+```go
+func (a *Adapter) OutputStyleDir(homeDir string) string {
+    return filepath.Join(homeDir, ".claude", "output-styles")
+}
+```
+
+### `SupportsSlashCommands() bool`
+
+Returns whether the agent supports slash commands.
+
+**Only OpenCode returns `true`**.
+
+### `CommandsDir(homeDir string) string`
+
+Returns the directory where slash command files are written.
+
+**Example (OpenCode)**:
+
+```go
+func (a *Adapter) CommandsDir(homeDir string) string {
+    return filepath.Join(homeDir, ".config", "opencode", "commands")
+}
+```
+
+### `SupportsSkills() bool`
+
+Returns whether the agent supports skill files.
+
+**All agents return `true`**.
+
+### `SupportsSystemPrompt() bool`
+
+Returns whether the agent supports system prompt injection.
+
+**All agents return `true`**.
+
+### `SupportsMCP() bool`
+
+Returns whether the agent supports MCP (Model Context Protocol) servers.
+
+**All agents return `true`**.
+
+## Adapter Implementations
+
+### Claude Code
+
+**File**: `/home/daytona/workspace/source/internal/agents/claude/adapter.go:21-155`
+
+**Key characteristics**:
+- System prompt: Marker-based sections (`<!-- gentle-ai:ID -->`)
+- MCP: Separate JSON files per server (`~/.claude/mcp/*.json`)
+- Supports output styles (`~/.claude/output-styles/`)
+- Binary detection: `exec.LookPath("claude")`
+- Auto-install: Yes (npm)
+
+### OpenCode
+
+**File**: `/home/daytona/workspace/source/internal/agents/opencode/adapter.go:21-157`
+
+**Key characteristics**:
+- System prompt: File replace (`~/.config/opencode/AGENTS.md`)
+- MCP: Merged into settings (`opencode.json`)
+- Supports slash commands (`~/.config/opencode/commands/`)
+- Binary detection: `exec.LookPath("opencode")`
+- Auto-install: Yes (npm)
+
+### Gemini CLI
+
+**File**: `/home/daytona/workspace/source/internal/agents/gemini/adapter.go:20-151`
+
+**Key characteristics**:
+- System prompt: File replace (`~/.gemini/GEMINI.md`)
+- MCP: Merged into settings (`settings.json`)
+- Supports custom sub-agents (`~/.gemini/agents/`)
+- Binary detection: `exec.LookPath("gemini")`
+- Auto-install: Yes (npm)
+
+### Cursor
+
+**File**: `/home/daytona/workspace/source/internal/agents/cursor/adapter.go:17-150`
+
+**Key characteristics**:
+- System prompt: File replace (`~/.cursor/rules/gentle-ai.mdc`)
+- MCP: Dedicated `mcp.json` file
+- Supports async sub-agents (v2.5+)
+- Binary detection: None (desktop app — detects via config directory)
+- Auto-install: No (desktop app)
+
+### VS Code Copilot
+
+**File**: `/home/daytona/workspace/source/internal/agents/vscode/adapter.go:14-155`
+
+**Key characteristics**:
+- System prompt: Instructions file (`Code/User/prompts/gentle-ai.instructions.md`)
+- MCP: Dedicated `mcp.json` file (`Code/User/mcp.json`)
+- Skills: Global directory (`~/.copilot/skills/`)
+- Binary detection: `exec.LookPath("code")`
+- Auto-install: No (desktop app)
+- Platform-aware: Paths differ on macOS, Linux, and Windows
+
+## Creating a New Adapter
+
+To add support for a new agent:
+
+1. **Define the agent ID** in `/home/daytona/workspace/source/internal/model/types.go:3-11`:
+
+```go
+const (
+    AgentClaudeCode    AgentID = "claude-code"
+    AgentOpenCode      AgentID = "opencode"
+    AgentGeminiCLI     AgentID = "gemini-cli"
+    AgentCursor        AgentID = "cursor"
+    AgentVSCodeCopilot AgentID = "vscode-copilot"
+    AgentYourNewAgent  AgentID = "your-new-agent"  // Add this
+)
+```
+
+2. **Create an adapter implementation** in `internal/agents/yournewagent/adapter.go`:
+
+```go
+package yournewagent
+
+import (
+    "context"
+    "os/exec"
+    "path/filepath"
+    "github.com/gentleman-programming/gentle-ai/internal/model"
+    "github.com/gentleman-programming/gentle-ai/internal/system"
+)
+
+type Adapter struct{}
+
+func NewAdapter() *Adapter {
+    return &Adapter{}
+}
+
+func (a *Adapter) Agent() model.AgentID {
+    return model.AgentYourNewAgent
+}
+
+func (a *Adapter) Tier() model.SupportTier {
+    return model.TierFull
+}
+
+// Implement all other interface methods...
+```
+
+3. **Register the adapter** in `/home/daytona/workspace/source/internal/agents/factory.go`:
+
+```go
+func NewAdapter(id model.AgentID) (Adapter, error) {
+    switch id {
+    case model.AgentClaudeCode:
+        return claude.NewAdapter(), nil
+    case model.AgentOpenCode:
+        return opencode.NewAdapter(), nil
+    case model.AgentYourNewAgent:
+        return yournewagent.NewAdapter(), nil
+    default:
+        return nil, ErrUnsupportedAgent{Agent: id}
+    }
+}
+```
+
+4. **Add detection to the registry** in `/home/daytona/workspace/source/internal/agents/registry.go`.
+
+5. **Write unit tests** for your adapter in `internal/agents/yournewagent/adapter_test.go`.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Config Structures" icon="file-code" href="/api/config-structure">
+    Configuration file formats for each agent
+  </Card>
+  <Card title="gentle-ai install" icon="download" href="/api/install">
+    Install and configure agents
+  </Card>
+</CardGroup>

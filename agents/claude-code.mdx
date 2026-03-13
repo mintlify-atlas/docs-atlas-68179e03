@@ -1,0 +1,307 @@
+---
+title: Claude Code
+description: Anthropic's official CLI agent with full Gentle AI support
+---
+
+Claude Code is Anthropic's official command-line coding agent. It receives full Gentleman stack support, including the exclusive **Output Styles** feature.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Skills" icon="book-open">
+    Full SDD workflow + foundation skills loaded from `~/.claude/skills/`
+  </Card>
+  <Card title="MCP Servers" icon="server">
+    Context7 and custom servers via separate config files in `~/.claude/mcp/`
+  </Card>
+  <Card title="Sub-agents" icon="users">
+    Native sub-agent support with parallel execution and custom definitions
+  </Card>
+  <Card title="Output Styles" icon="paintbrush">
+    Exclusive feature — custom response formatting via `~/.claude/output-styles/`
+  </Card>
+</CardGroup>
+
+## Installation
+
+Claude Code can be auto-installed by Gentle AI:
+
+```bash
+gentle-ai install --agent claude-code --preset full-gentleman
+```
+
+This installs Claude Code via npm and configures the full ecosystem.
+
+### Manual Installation
+
+If you prefer to install Claude Code manually:
+
+```bash
+# Install Claude Code
+npm install -g @anthropic/claude-code
+
+# Then configure with Gentle AI
+gentle-ai install --agent claude-code --preset full-gentleman
+```
+
+## Configuration
+
+### Config Directory
+
+All Claude Code configuration lives in `~/.claude/`:
+
+```
+~/.claude/
+├── CLAUDE.md              # System prompt (Gentleman persona + SDD orchestrator)
+├── settings.json          # Claude Code settings
+├── skills/                # Skill files (SDD + foundation)
+│   ├── sdd-init.md
+│   ├── sdd-propose.md
+│   ├── go-testing.md
+│   └── ...
+├── mcp/                   # MCP server configs (separate files)
+│   └── context7.json
+└── output-styles/         # Custom output styles (optional)
+    └── gentleman.md
+```
+
+### Windows Config Path
+
+```powershell
+%USERPROFILE%\.claude\
+```
+
+## System Prompt Strategy
+
+Claude Code uses **markdown sections** for system prompt injection:
+
+- System prompt file: `~/.claude/CLAUDE.md`
+- Components are injected as markdown sections with H1 headers
+- Existing content is preserved using marker-based merging
+- Gentle AI updates only managed sections between markers
+
+### Example Structure
+
+```markdown
+# Gentleman Persona
+
+You are a teaching-oriented coding mentor...
+
+# SDD Orchestrator
+
+Spec-Driven Development workflow with 9 phases...
+
+# Skills
+
+You have access to the following skills:
+- sdd-init: Bootstrap SDD context
+- sdd-propose: Create change proposals
+...
+```
+
+## MCP Configuration
+
+Claude Code uses **separate MCP files** per server:
+
+- Config directory: `~/.claude/mcp/`
+- Each server gets its own JSON file (e.g., `context7.json`)
+- Claude Code automatically discovers all `.json` files in this directory
+
+### Context7 Configuration
+
+Gentle AI installs Context7 MCP server:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"]
+    }
+  }
+}
+```
+
+## Output Styles
+
+**Output Styles** are a Claude Code exclusive feature. They allow you to customize how Claude formats responses.
+
+### How It Works
+
+- Output styles are markdown files in `~/.claude/output-styles/`
+- Invoke with `/style <style-name>` in the chat
+- Claude formats responses according to the style instructions
+
+### Gentleman Output Style
+
+The `full-gentleman` preset includes a Gentleman output style:
+
+```markdown
+# Gentleman Output Style
+
+Respond with:
+- Clear technical explanations
+- Teaching-oriented guidance
+- Security-first recommendations
+- "Why" before "what"
+```
+
+Invoke with `/style gentleman` during your session.
+
+## Sub-agent Support
+
+Claude Code has native sub-agent support:
+
+- **Parallel execution** — Multiple sub-agents can run simultaneously
+- **Custom agent definitions** — Define your own specialized agents
+- **SDD orchestration** — Full 9-phase workflow with delegation
+
+### How Sub-agents Work
+
+1. Main agent receives a request (e.g., "implement feature X")
+2. Agent decomposes into tasks using SDD workflow
+3. Agent spawns sub-agents for parallel execution
+4. Sub-agents report back to main agent
+5. Main agent synthesizes results and applies changes
+
+## Skills
+
+All 11 curated skills are installed:
+
+### SDD Workflow (9 skills)
+
+- `sdd-init` — Bootstrap SDD context
+- `sdd-explore` — Investigate codebase
+- `sdd-propose` — Create change proposals
+- `sdd-spec` — Write specifications
+- `sdd-design` — Technical design
+- `sdd-tasks` — Break down implementation
+- `sdd-apply` — Implement tasks
+- `sdd-verify` — Validate implementation
+- `sdd-archive` — Sync specs and archive
+
+### Foundation Skills (2 skills)
+
+- `go-testing` — Go testing patterns (including Bubbletea TUI testing)
+- `skill-creator` — Create new skills following the Agent Skills spec
+
+Skills are loaded from `~/.claude/skills/` as markdown files.
+
+## What Gentle AI Installs
+
+When you run `gentle-ai install --agent claude-code --preset full-gentleman`:
+
+1. **Installs Claude Code** via npm (if not already installed)
+2. **Creates config directory** at `~/.claude/`
+3. **Writes system prompt** to `CLAUDE.md` with Gentleman persona + SDD orchestrator
+4. **Installs 11 skill files** in `~/.claude/skills/`
+5. **Configures Context7 MCP server** in `~/.claude/mcp/context7.json`
+6. **Installs GGA binary** globally (opt-in per project with `gga init`)
+7. **Applies Gentleman output style** in `~/.claude/output-styles/gentleman.md`
+
+## Platform Notes
+
+### macOS
+
+```bash
+brew tap Gentleman-Programming/homebrew-tap
+brew install gentle-ai
+gentle-ai install --agent claude-code --preset full-gentleman
+```
+
+### Linux
+
+```bash
+# Ubuntu/Debian
+sudo apt install npm
+npm install -g @anthropic/claude-code
+gentle-ai install --agent claude-code --preset full-gentleman
+
+# Arch
+sudo pacman -S npm
+npm install -g @anthropic/claude-code
+gentle-ai install --agent claude-code --preset full-gentleman
+```
+
+### Windows
+
+```powershell
+# Install Node.js if not present
+winget install OpenJS.NodeJS
+
+# Install Claude Code
+npm install -g @anthropic/claude-code
+
+# Configure with Gentle AI
+gentle-ai.exe install --agent claude-code --preset full-gentleman
+```
+
+Config lives in `%USERPROFILE%\.claude\`
+
+## Verification
+
+After installation, verify the configuration:
+
+```bash
+# Check Claude Code is installed
+claude --version
+
+# Check config directory exists
+ls ~/.claude/
+
+# Check skills are installed
+ls ~/.claude/skills/
+
+# Check MCP is configured
+cat ~/.claude/mcp/context7.json
+
+# Check system prompt
+cat ~/.claude/CLAUDE.md
+```
+
+## Troubleshooting
+
+### Claude Code Not Found
+
+If `claude` command is not found after installation:
+
+```bash
+# Check npm global bin path
+npm bin -g
+
+# Add to PATH (add to ~/.bashrc or ~/.zshrc)
+export PATH="$(npm bin -g):$PATH"
+```
+
+### MCP Server Not Loading
+
+If Context7 doesn't load:
+
+1. Check `~/.claude/mcp/context7.json` exists
+2. Verify `npx` is on PATH: `which npx`
+3. Test server manually: `npx -y @context7/mcp-server`
+
+### Skills Not Available
+
+If skills aren't loading:
+
+1. Check `~/.claude/skills/` directory exists
+2. Verify skill files are markdown: `ls ~/.claude/skills/*.md`
+3. Check system prompt references skills: `grep -i skill ~/.claude/CLAUDE.md`
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="OpenCode" icon="terminal" href="/agents/opencode">
+    Alternative CLI agent with slash commands
+  </Card>
+  <Card title="Skills Reference" icon="book" href="/components/skills">
+    Learn about the 11 curated skills
+  </Card>
+  <Card title="SDD Workflow" icon="diagram-project" href="/components/sdd">
+    Deep dive into Spec-Driven Development
+  </Card>
+  <Card title="MCP Servers" icon="server" href="/components/context7">
+    Explore Model Context Protocol integration
+  </Card>
+</CardGroup>

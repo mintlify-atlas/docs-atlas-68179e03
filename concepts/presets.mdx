@@ -1,0 +1,458 @@
+---
+title: Configuration Presets
+description: Choose your configuration level from Full Gentleman to Minimal, or build a custom setup
+---
+
+## Overview
+
+Gentle AI offers **4 configuration presets** that bundle components and skills based on your needs. Choose a preset for quick setup, or go custom to pick individual components.
+
+<CardGroup cols={2}>
+  <Card title="Full Gentleman" icon="crown" color="#E0C15A">
+    **Everything included**
+    
+    All components + all skills + Gentleman persona
+  </Card>
+  
+  <Card title="Ecosystem Only" icon="puzzle-piece" color="#7FB4CA">
+    **Tools without persona**
+    
+    All components + P0 skills + Gentleman persona (but lighter)
+  </Card>
+  
+  <Card title="Minimal" icon="minimize" color="#957FB8">
+    **Just the essentials**
+    
+    Engram + Persona + Permissions only
+  </Card>
+  
+  <Card title="Custom" icon="sliders" color="#CB7C94">
+    **You pick everything**
+    
+    Choose components, skills, and persona individually
+  </Card>
+</CardGroup>
+
+## Preset Comparison
+
+### Component Matrix
+
+| Component | Full Gentleman | Ecosystem Only | Minimal | Custom |
+|-----------|---------------|----------------|---------|--------|
+| **Engram** (memory) | ✓ | ✓ | ✓ | Optional |
+| **SDD** (workflow) | ✓ (all 9 skills) | ✓ (P0 skills) | — | Optional |
+| **Skills** (coding) | ✓ (all 11) | ✓ (P0: 11) | — | Optional |
+| **Context7** (docs) | ✓ | ✓ | — | Optional |
+| **Persona** | Gentleman | Gentleman | Neutral | Choice |
+| **Permissions** | ✓ | ✓ | ✓ | ✓ (always) |
+| **GGA** (code review) | ✓ | ✓ | — | Optional |
+| **Theme** | ✓ (future) | ✓ (future) | — | Optional |
+
+### Feature Comparison
+
+<Tabs>
+  <Tab title="Memory">
+    | Feature | Full Gentleman | Ecosystem Only | Minimal |
+    |---------|---------------|----------------|---------|
+    | Cross-session memory | ✓ | ✓ | ✓ |
+    | Session summaries | ✓ | ✓ | ✓ |
+    | Decision tracking | ✓ | ✓ | ✓ |
+    | Bug history | ✓ | ✓ | ✓ |
+    | Git sync (teams) | ✓ | ✓ | — |
+  </Tab>
+  
+  <Tab title="Workflow">
+    | Feature | Full Gentleman | Ecosystem Only | Minimal |
+    |---------|---------------|----------------|---------|
+    | SDD orchestrator | ✓ | ✓ | — |
+    | 9-phase workflow | ✓ | ✓ | — |
+    | Sub-agent delegation | ✓ | ✓ | — |
+    | Spec/design docs | ✓ | ✓ | — |
+    | Verification phase | ✓ | ✓ | — |
+  </Tab>
+  
+  <Tab title="Skills">
+    | Feature | Full Gentleman | Ecosystem Only | Minimal |
+    |---------|---------------|----------------|---------|
+    | SDD skills (9) | ✓ | ✓ | — |
+    | Foundation skills (2) | ✓ | ✓ | — |
+    | Future skills | ✓ (when released) | — | — |
+    | Custom skills | ✓ (manual) | ✓ (manual) | ✓ (manual) |
+    | Auto-loading | ✓ | ✓ | — |
+  </Tab>
+  
+  <Tab title="Quality">
+    | Feature | Full Gentleman | Ecosystem Only | Minimal |
+    |---------|---------------|----------------|---------|
+    | GGA code review | ✓ | ✓ | — |
+    | Pre-commit hooks | ✓ | ✓ | — |
+    | Smart caching | ✓ | ✓ | — |
+    | AGENTS.md rules | ✓ | ✓ | — |
+    | PR review mode | ✓ | ✓ | — |
+  </Tab>
+</Tabs>
+
+## Preset Details
+
+### Full Gentleman
+
+<Accordion title="What You Get">
+  **The complete Gentleman AI experience.**
+  
+  #### Components
+  - ✓ Engram — Persistent memory with auto-start
+  - ✓ SDD — All 9 workflow skills + orchestrator
+  - ✓ Skills — All 11 current skills (9 SDD + 2 foundation)
+  - ✓ Context7 — Real-time framework documentation
+  - ✓ Persona — Full Gentleman mode with teaching behavior
+  - ✓ Permissions — Security-first guardrails
+  - ✓ GGA — AI-powered code review on every commit
+  - ✓ Theme — Gentleman Kanagawa theme (future)
+  
+  #### Persona Behavior
+  - **Teaching-oriented** — Explains the why, not just the how
+  - **Challenges bad practices** — Pushes back on anti-patterns
+  - **Bilingual** — Rioplatense Spanish for Spanish input
+  - **Custom thinking verbs** — "Tomando un Cafecito mientras Pienso"
+  - **Gentleman statusline** — Custom status with model info
+  
+  #### Best For
+  - Developers who want the full championship-level AI experience
+  - Teams adopting AI-assisted development seriously
+  - Anyone who wants a mentor, not just a code completion tool
+  - Projects with complex requirements needing SDD workflow
+  
+  #### Installation
+  ```bash
+  gentle-ai install --preset full-gentleman
+  ```
+  
+  Or in TUI, select "Full Gentleman" in preset screen.
+</Accordion>
+
+### Ecosystem Only
+
+<Accordion title="What You Get">
+  **All the tools, lighter persona overlay.**
+  
+  #### Components
+  - ✓ Engram — Persistent memory
+  - ✓ SDD — P0 skills only (all 9 SDD skills still included)
+  - ✓ Skills — P0 priority skills (currently all 11)
+  - ✓ Context7 — Real-time documentation
+  - ✓ Persona — Gentleman mode (but professional tone)
+  - ✓ Permissions — Security guardrails
+  - ✓ GGA — Code review
+  - ✓ Theme — (future)
+  
+  #### Persona Behavior
+  - **Professional** — Helpful without personality quirks
+  - **Still teaches** — Explains concepts when needed
+  - **No Rioplatense** — English only, clear communication
+  - **Standard thinking verbs** — "Thinking...", "Processing..."
+  - **Standard statusline** — Default status display
+  
+  #### Difference from Full Gentleman
+  - Same components and skills (currently)
+  - Less personality in communication
+  - No Spanish phrases or Tony Stark analogies
+  - More subdued teaching style
+  
+  #### Best For
+  - Teams that want the ecosystem without personality
+  - Developers who prefer neutral tone
+  - Companies with standard communication policies
+  - Anyone who finds Gentleman mode too informal
+  
+  #### Installation
+  ```bash
+  gentle-ai install --preset ecosystem-only
+  ```
+</Accordion>
+
+### Minimal
+
+<Accordion title="What You Get">
+  **Just memory and security.**
+  
+  #### Components
+  - ✓ Engram — Persistent cross-session memory
+  - ✓ Persona — Neutral mode (no personality)
+  - ✓ Permissions — Security guardrails (always included)
+  - — SDD — Not included
+  - — Skills — Not included (except what agent has by default)
+  - — Context7 — Not included
+  - — GGA — Not included
+  - — Theme — Not included
+  
+  #### Persona Behavior
+  - **Neutral** — Agent's default behavior preserved
+  - **No teaching overlay** — Helpful but doesn't push back
+  - **Security only** — Permissions still block .env access
+  
+  #### What You Keep
+  - Cross-session memory via Engram
+  - Session summaries and decision tracking
+  - Security guardrails (can't be disabled)
+  - Agent's default capabilities
+  
+  #### What You Lose
+  - No SDD workflow (agent codes without planning)
+  - No curated skill library
+  - No real-time documentation via Context7
+  - No code review via GGA
+  - No teaching persona
+  
+  #### Best For
+  - Trying Gentle AI for the first time
+  - Developers who only want memory
+  - Low-complexity projects
+  - Testing before full commitment
+  
+  #### Installation
+  ```bash
+  gentle-ai install --preset minimal
+  ```
+</Accordion>
+
+### Custom
+
+<Accordion title="What You Get">
+  **You pick everything.**
+  
+  #### How It Works
+  1. **Select components** — Pick which of the 8 to install
+  2. **Select skills** — Choose by category or individual skills
+  3. **Select persona** — Gentleman, Neutral, or Custom
+  4. **Review and install** — See full plan before applying
+  
+  #### Component Selection
+  
+  In the TUI or via CLI flags:
+  
+  ```bash
+  gentle-ai install \
+    --preset custom \
+    --component engram,sdd,skills,context7,gga \
+    --skill go-testing,skill-creator \
+    --persona neutral
+  ```
+  
+  #### Skill Selection
+  
+  Choose by category:
+  - **SDD** — All 9 SDD workflow skills
+  - **Foundation** — go-testing, skill-creator
+  - **Future categories** — Frontend, Backend, Testing (when released)
+  
+  Or pick individual skills:
+  ```bash
+  --skill sdd-init,sdd-explore,sdd-propose,go-testing
+  ```
+  
+  #### Example Configurations
+  
+  **Memory + Code Review Only**:
+  ```bash
+  gentle-ai install \
+    --preset custom \
+    --component engram,gga,permissions \
+    --persona neutral
+  ```
+  
+  **SDD Workflow Without Persona**:
+  ```bash
+  gentle-ai install \
+    --preset custom \
+    --component engram,sdd,permissions \
+    --skill sdd-init,sdd-explore,sdd-propose,sdd-spec,sdd-design,sdd-tasks,sdd-apply,sdd-verify,sdd-archive \
+    --persona neutral
+  ```
+  
+  **Documentation + Skills Only**:
+  ```bash
+  gentle-ai install \
+    --preset custom \
+    --component skills,context7,permissions \
+    --skill go-testing,skill-creator \
+    --persona gentleman
+  ```
+  
+  #### Best For
+  - Experienced users who know exactly what they want
+  - Teams with specific requirements
+  - Developers building custom workflows
+  - Anyone who wants fine-grained control
+</Accordion>
+
+## Decision Guide
+
+<Steps>
+  <Step title="Do you want the full experience?">
+    **Yes** → `full-gentleman`
+    
+    You get everything: memory, workflow, skills, docs, persona, code review.
+    
+    **No** → Continue to Step 2
+  </Step>
+  
+  <Step title="Do you want the Gentleman teaching persona?">
+    **Yes** → `full-gentleman` or `ecosystem-only`
+    
+    (Choose Full for personality, Ecosystem for professional tone)
+    
+    **No** → Continue to Step 3
+  </Step>
+  
+  <Step title="Do you want SDD workflow and skills?">
+    **Yes** → `ecosystem-only` with neutral persona
+    
+    ```bash
+    gentle-ai install --preset ecosystem-only
+    # Then configure neutral persona in TUI
+    ```
+    
+    **No** → Continue to Step 4
+  </Step>
+  
+  <Step title="Do you just want memory?">
+    **Yes** → `minimal`
+    
+    Just Engram + permissions. Clean and simple.
+    
+    **No** → `custom`
+    
+    Build your own configuration from scratch.
+  </Step>
+</Steps>
+
+## Upgrading Between Presets
+
+You can change presets after installation:
+
+### From Minimal to Full
+
+```bash
+# You have minimal installed
+gentle-ai install --preset full-gentleman
+
+# Gentle AI will:
+# 1. Detect existing Engram installation (keep it)
+# 2. Add SDD skills
+# 3. Add coding skills
+# 4. Add Context7 MCP
+# 5. Add GGA
+# 6. Inject Gentleman persona
+# 7. Preserve your existing Engram data
+```
+
+### From Full to Minimal
+
+<Warning>
+Downgrading removes components. This action backs up your config first.
+</Warning>
+
+```bash
+# You have full-gentleman installed
+gentle-ai install --preset minimal
+
+# Gentle AI will:
+# 1. Back up all configs to ~/.gentle-ai-backup-TIMESTAMP/
+# 2. Remove SDD skills
+# 3. Remove coding skills
+# 4. Remove Context7 MCP
+# 5. Remove GGA
+# 6. Change persona to neutral
+# 7. Keep Engram (minimal includes it)
+```
+
+### Custom Component Changes
+
+```bash
+# Add GGA to existing setup
+gentle-ai install --component gga
+
+# Add specific skills
+gentle-ai install --skill react-19,nextjs-15  # (when released)
+
+# Change persona only
+gentle-ai install --persona gentleman
+```
+
+## Multi-Agent Presets
+
+When installing for multiple agents, the preset applies to all:
+
+```bash
+gentle-ai install \
+  --agent claude-code,opencode,cursor \
+  --preset full-gentleman
+```
+
+**Result**:
+- All 3 agents get Full Gentleman configuration
+- All connect to same Engram instance
+- Skills copied to each agent's directory
+- GGA configured to work with all 3
+
+**Per-agent customization**: Not supported in presets. Use `custom` preset if you need different configs per agent.
+
+## Configuration Files
+
+Each preset creates different configuration artifacts:
+
+### Full Gentleman
+
+```bash
+~/.claude/
+  CLAUDE.md              # Persona + SDD orchestrator
+  settings.json          # Permissions, theme, statusline, thinking verbs
+  skills/                # All 11 skills
+    sdd-init.md
+    sdd-explore.md
+    ...
+    go-testing.md
+    skill-creator.md
+  plugins/               # Engram plugin
+  mcp/
+    context7.json
+    engram.json
+
+~/.config/gga/
+  config                 # GGA_PROVIDER=claude
+
+~/.engram/
+  engram.db             # Shared memory database
+```
+
+### Minimal
+
+```bash
+~/.claude/
+  settings.json         # Permissions only, neutral persona
+  # No skills directory
+  # No MCP servers beyond Engram
+
+~/.engram/
+  engram.db            # Still present
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Install Now" icon="download" href="/quickstart">
+    Choose your preset and get started
+  </Card>
+  
+  <Card title="Components" icon="puzzle-piece" href="/concepts/components">
+    Learn what each component does
+  </Card>
+  
+  <Card title="Personas" icon="user-tie" href="/concepts/personas">
+    Understand persona modes
+  </Card>
+  
+  <Card title="CLI Usage" icon="terminal" href="/api/install">
+    Advanced installation options
+  </Card>
+</CardGroup>

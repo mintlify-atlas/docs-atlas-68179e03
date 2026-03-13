@@ -1,0 +1,476 @@
+---
+title: "Foundation Skills"
+description: "Core skills for Go testing and creating custom AI agent skills"
+icon: "code"
+---
+
+Foundation skills provide essential patterns for testing and extending the Gentle AI ecosystem. These two skills are installed by default with both `full-gentleman` and `ecosystem-only` presets.
+
+## Go Testing Skill
+
+The **go-testing** skill teaches AI agents comprehensive Go testing patterns, with special focus on Bubbletea TUI testing.
+
+### When to Use
+
+- Writing Go unit tests
+- Testing Bubbletea TUI components
+- Creating table-driven tests
+- Adding integration tests
+- Using golden file testing
+
+### Critical Patterns
+
+<AccordionGroup>
+  <Accordion title="Table-Driven Tests">
+    Standard Go pattern for multiple test cases:
+    
+    ```go
+    func TestSomething(t *testing.T) {
+        tests := []struct {
+            name     string
+            input    string
+            expected string
+            wantErr  bool
+        }{
+            {
+                name:     "valid input",
+                input:    "hello",
+                expected: "HELLO",
+                wantErr:  false,
+            },
+            {
+                name:     "empty input",
+                input:    "",
+                expected: "",
+                wantErr:  true,
+            },
+        }
+    
+        for _, tt := range tests {
+            t.Run(tt.name, func(t *testing.T) {
+                result, err := ProcessInput(tt.input)
+    
+                if (err != nil) != tt.wantErr {
+                    t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+                    return
+                }
+    
+                if result != tt.expected {
+                    t.Errorf("got %q, want %q", result, tt.expected)
+                }
+            })
+        }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Bubbletea Model Testing">
+    Test Model state transitions directly:
+    
+    ```go
+    func TestModelUpdate(t *testing.T) {
+        m := NewModel()
+    
+        // Simulate key press
+        newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+        m = newModel.(Model)
+    
+        if m.Screen != ScreenMainMenu {
+            t.Errorf("expected ScreenMainMenu, got %v", m.Screen)
+        }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Teatest Integration Tests">
+    Use Charmbracelet's teatest for TUI testing:
+    
+    ```go
+    func TestInteractiveFlow(t *testing.T) {
+        m := NewModel()
+        tm := teatest.NewTestModel(t, m)
+    
+        // Send keys
+        tm.Send(tea.KeyMsg{Type: tea.KeyEnter})
+        tm.Send(tea.KeyMsg{Type: tea.KeyDown})
+        tm.Send(tea.KeyMsg{Type: tea.KeyEnter})
+    
+        // Wait for model to update
+        tm.WaitFinished(t, teatest.WithDuration(time.Second))
+    
+        // Get final model
+        finalModel := tm.FinalModel(t).(Model)
+    
+        if finalModel.Screen != ExpectedScreen {
+            t.Errorf("wrong screen: got %v", finalModel.Screen)
+        }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Golden File Testing">
+    Compare output against saved golden files:
+    
+    ```go
+    func TestOSSelectGolden(t *testing.T) {
+        m := NewModel()
+        m.Screen = ScreenOSSelect
+        m.Width = 80
+        m.Height = 24
+    
+        output := m.View()
+    
+        golden := filepath.Join("testdata", "TestOSSelectGolden.golden")
+    
+        if *update {
+            os.WriteFile(golden, []byte(output), 0644)
+        }
+    
+        expected, _ := os.ReadFile(golden)
+        if output != string(expected) {
+            t.Errorf("output doesn't match golden file")
+        }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Decision Tree
+
+The skill provides a decision tree for choosing the right testing approach:
+
+```
+Testing a function?
+├── Pure function? → Table-driven test
+├── Has side effects? → Mock dependencies
+├── Returns error? → Test both success and error cases
+└── Complex logic? → Break into smaller testable units
+
+Testing TUI component?
+├── State change? → Test Model.Update() directly
+├── Full flow? → Use teatest.NewTestModel()
+├── Visual output? → Use golden file testing
+└── Key handling? → Send tea.KeyMsg
+
+Testing system/exec?
+├── Mock os/exec? → Use interface + mock
+├── Real commands? → Integration test with --short skip
+└── File operations? → Use t.TempDir()
+```
+
+### Test File Organization
+
+```
+internal/tui/
+├── model.go
+├── model_test.go           # Model tests
+├── update.go
+├── update_test.go          # Update handler tests
+├── view.go
+├── view_test.go            # View rendering tests
+├── teatest_test.go         # Teatest integration tests
+├── comprehensive_test.go   # Full flow tests
+├── testdata/
+│   ├── TestOSSelectGolden.golden
+│   └── TestViewGolden.golden
+└── trainer/
+    ├── types.go
+    ├── types_test.go
+    ├── exercises.go
+    ├── exercises_test.go
+    └── simulator_test.go
+```
+
+### Common Commands
+
+```bash
+go test ./...                           # Run all tests
+go test -v ./internal/tui/...          # Verbose TUI tests
+go test -run TestNavigation             # Run specific test
+go test -cover ./...                    # With coverage
+go test -update ./...                   # Update golden files
+go test -short ./...                    # Skip integration tests
+```
+
+## Skill Creator Skill
+
+The **skill-creator** skill guides AI agents through creating new skills that follow the Agent Skills specification.
+
+### When to Create a Skill
+
+Create a skill when:
+
+- A pattern is used repeatedly and AI needs guidance
+- Project-specific conventions differ from generic best practices
+- Complex workflows need step-by-step instructions
+- Decision trees help AI choose the right approach
+
+**Don't create a skill when:**
+
+- Documentation already exists (create a reference instead)
+- Pattern is trivial or self-explanatory
+- It's a one-off task
+
+### Skill Structure
+
+```
+skills/{skill-name}/
+├── SKILL.md              # Required - main skill file
+├── assets/               # Optional - templates, schemas, examples
+│   ├── template.py
+│   └── schema.json
+└── references/           # Optional - links to local docs
+    └── docs.md           # Points to docs/developer-guide/*.mdx
+```
+
+### SKILL.md Template
+
+Every skill follows a standard markdown format:
+
+```markdown
+---
+name: {skill-name}
+description: >
+  {One-line description of what this skill does}.
+  Trigger: {When the AI should load this skill}.
+license: Apache-2.0
+metadata:
+  author: gentleman-programming
+  version: "1.0"
+---
+
+## When to Use
+
+{Bullet points of when to use this skill}
+
+## Critical Patterns
+
+{The most important rules - what AI MUST know}
+
+## Code Examples
+
+{Minimal, focused examples}
+
+## Commands
+
+```bash
+{Common commands}
+```
+
+## Resources
+
+- **Templates**: See `assets/` directory for templates and examples
+- **Documentation**: See `references/` directory for local docs
+```
+
+### Naming Conventions
+
+| Type | Pattern | Examples |
+|------|---------|----------|
+| Generic skill | `{technology}` | `pytest`, `playwright`, `typescript` |
+| Project-specific | `{project}-{component}` | `myapp-api`, `myapp-ui` |
+| Testing skill | `{project}-test-{component}` | `myapp-test-sdk`, `myapp-test-api` |
+| Workflow skill | `{action}-{target}` | `skill-creator`, `jira-task` |
+
+### Frontmatter Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | Yes | Skill identifier (lowercase, hyphens) |
+| `description` | Yes | What + Trigger in one block |
+| `license` | Yes | Always `Apache-2.0` for Gentle AI skills |
+| `metadata.author` | Yes | Author identifier |
+| `metadata.version` | Yes | Semantic version as string |
+
+### Content Guidelines
+
+<Tabs>
+  <Tab title="DO">
+    - Start with the most critical patterns
+    - Use tables for decision trees
+    - Keep code examples minimal and focused
+    - Include Commands section with copy-paste commands
+    - Use local file paths in references
+  </Tab>
+  <Tab title="DON'T">
+    - Add Keywords section (agent searches frontmatter, not body)
+    - Duplicate content from existing docs (reference instead)
+    - Include lengthy explanations (link to docs)
+    - Add troubleshooting sections (keep focused)
+    - Use web URLs in references (use local paths)
+  </Tab>
+</Tabs>
+
+### Decision: assets/ vs references/
+
+- Need code templates? → Use `assets/` directory
+- Need JSON schemas? → Use `assets/` directory
+- Need example configs? → Use `assets/` directory
+- Link to existing docs? → Use `references/` directory
+- Link to external guides? → Use `references/` directory (with local path)
+
+**Key Rule**: `references/` should point to LOCAL files, not web URLs.
+
+### Registering the Skill
+
+After creating a skill, add it to your project's skill registry:
+
+**In `AGENTS.md`:**
+
+```markdown
+| `{skill-name}` | {Description} | [SKILL.md](skills/{skill-name}/SKILL.md) |
+```
+
+**In `.atl/skill-registry.md`** (automatically updated by sdd-init):
+
+The skill registry tracks all available skills across:
+- User-level directories (`~/.claude/skills/`, `~/.config/opencode/skills/`, etc.)
+- Project-level directories (`.claude/skills/`, `.agent/skills/`, `skills/`)
+
+### Creation Checklist
+
+Before creating a new skill:
+
+- [ ] Skill doesn't already exist (check `skills/`)
+- [ ] Pattern is reusable (not one-off)
+- [ ] Name follows conventions
+- [ ] Frontmatter is complete (description includes trigger keywords)
+- [ ] Critical patterns are clear
+- [ ] Code examples are minimal
+- [ ] Commands section exists
+- [ ] Added to AGENTS.md
+- [ ] Skill registry updated (automatic via sdd-init)
+
+## Example: Creating a Custom Skill
+
+Let's walk through creating a custom skill for your project.
+
+<Steps>
+<Step title="Identify the pattern">
+  Suppose your project uses a specific API client pattern that should be consistent across all services.
+  
+  This is a good candidate for a skill because:
+  - Pattern is reused (multiple services)
+  - Conventions are project-specific
+  - AI needs guidance on structure
+</Step>
+
+<Step title="Create the skill file">
+  Create `skills/myapp-api-client/SKILL.md`:
+  
+  ```markdown
+  ---
+  name: myapp-api-client
+  description: >
+    API client patterns for MyApp services.
+    Trigger: When creating or modifying API clients, service calls, HTTP requests.
+  license: Apache-2.0
+  metadata:
+    author: myapp-team
+    version: "1.0"
+  ---
+  
+  ## When to Use
+  
+  - Creating a new service client
+  - Adding endpoints to existing clients
+  - Handling API errors
+  - Writing tests for API interactions
+  
+  ## Critical Patterns
+  
+  ### Pattern 1: Client Structure
+  
+  All clients follow this structure:
+  
+  ```go
+  type ServiceClient struct {
+      baseURL string
+      apiKey  string
+      client  *http.Client
+  }
+  
+  func NewServiceClient(baseURL, apiKey string) *ServiceClient {
+      return &ServiceClient{
+          baseURL: baseURL,
+          apiKey:  apiKey,
+          client:  &http.Client{Timeout: 30 * time.Second},
+      }
+  }
+  ```
+  
+  ### Pattern 2: Error Handling
+  
+  Wrap all API errors with context:
+  
+  ```go
+  if err != nil {
+      return fmt.Errorf("failed to call %s: %w", endpoint, err)
+  }
+  ```
+  
+  ## Resources
+  
+  - **Examples**: See `internal/clients/` for existing clients
+  - **Testing**: Use the `go-testing` skill for test patterns
+  ```
+</Step>
+
+<Step title="Register the skill">
+  Add to your project's `AGENTS.md`:
+  
+  ```markdown
+  | `myapp-api-client` | API client patterns | [SKILL.md](skills/myapp-api-client/SKILL.md) |
+  ```
+  
+  The skill registry will automatically pick this up on next `sdd-init`.
+</Step>
+
+<Step title="Test the skill">
+  Ask your agent:
+  
+  ```
+  "Create a new API client for the payments service"
+  ```
+  
+  The agent should:
+  1. Detect the trigger keywords ("API client")
+  2. Load the `myapp-api-client` skill
+  3. Follow the patterns defined in the skill
+  4. Generate code matching your project conventions
+</Step>
+</Steps>
+
+## Skill Loading Behavior
+
+When an agent task matches a skill trigger:
+
+1. **Scan**: Agent scans all skill directories (user + project)
+2. **Match**: Checks frontmatter `description` for trigger keywords
+3. **Load**: Reads the full SKILL.md content
+4. **Apply**: Follows the skill's instructions during execution
+
+### Skill Priority
+
+If the same skill name exists in multiple locations:
+
+- **Project-level** skills take precedence over **user-level**
+- This allows project-specific overrides of global skills
+
+### Deduplication
+
+The skill registry deduplicates by skill name:
+
+- If `go-testing` exists in both `~/.claude/skills/` and `./skills/`, only one entry appears
+- Project-level location is kept (higher priority)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SDD Workflow" icon="diagram-project" href="/skills/sdd-workflow">
+    Learn the 9-phase Spec-Driven Development workflow
+  </Card>
+  <Card title="Skills Overview" icon="brain" href="/skills/overview">
+    Back to skills overview
+  </Card>
+</CardGroup>

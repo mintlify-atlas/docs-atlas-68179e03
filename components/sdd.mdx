@@ -1,0 +1,361 @@
+---
+title: "SDD"
+description: "Spec-Driven Development workflow orchestrator"
+icon: "diagram-project"
+---
+
+SDD (Spec-Driven Development) is a structured workflow for planning and implementing substantial changes. It breaks work into 9 phases with clear dependencies and artifact outputs.
+
+## What it does
+
+SDD transforms your AI agent into a planning-first coordinator:
+- **Phase-based workflow**: 9 phases from exploration to archive
+- **Sub-agent orchestration**: Delegate work to focused sub-agents
+- **Artifact persistence**: Store specs, designs, and tasks in Engram or OpenSpec
+- **Dependency tracking**: Each phase knows what it needs to run
+- **Slash commands**: Quick access to SDD phases (OpenCode only)
+
+## Installation
+
+SDD installs:
+1. **Orchestrator prompt** - Coordination rules injected into system prompt
+2. **9 SDD skill files** - One per phase (init, explore, propose, spec, design, tasks, apply, verify, archive)
+3. **3 shared convention files** - Persistence, Engram, and OpenSpec conventions
+4. **Slash commands** - `/sdd-init`, `/sdd-new`, `/sdd-apply`, etc. (OpenCode only)
+5. **Agent definition** - `sdd-orchestrator` agent for OpenCode
+
+### What gets configured
+
+**System Prompt**
+- Orchestrator rules added to agent's system prompt
+- Delegation patterns and anti-patterns
+- Phase dependency graph
+- Sub-agent launch protocol
+
+**Skills Directory**
+- `sdd-init/SKILL.md`
+- `sdd-explore/SKILL.md`
+- `sdd-propose/SKILL.md`
+- `sdd-spec/SKILL.md`
+- `sdd-design/SKILL.md`
+- `sdd-tasks/SKILL.md`
+- `sdd-apply/SKILL.md`
+- `sdd-verify/SKILL.md`
+- `sdd-archive/SKILL.md`
+- `_shared/persistence-contract.md`
+- `_shared/engram-convention.md`
+- `_shared/openspec-convention.md`
+
+**OpenCode Only**
+- `~/.config/opencode/commands/sdd-*.md` - 8 slash commands
+- `~/.config/opencode/opencode.json` - `sdd-orchestrator` agent definition
+
+## The 9 phases
+
+### Phase dependency graph
+
+```
+proposal -> specs --> tasks -> apply -> verify -> archive
+             ^
+             |
+           design
+```
+
+<AccordionGroup>
+<Accordion title="1. sdd-init" icon="flag">
+Bootstrap SDD context in a project.
+
+**Reads**: Nothing  
+**Writes**: Project context (tech stack, conventions, architecture)
+
+```bash
+# Usage
+/sdd-init
+```
+
+Detects:
+- Tech stack (package.json, go.mod, etc.)
+- Existing conventions (linters, test frameworks)
+- Architecture patterns
+
+Persists to Engram or creates `openspec/` directory structure.
+</Accordion>
+
+<Accordion title="2. sdd-explore" icon="magnifying-glass">
+Investigate codebase before committing to a change.
+
+**Reads**: Nothing  
+**Writes**: Exploration artifact
+
+```bash
+# Usage
+/sdd-explore authentication flow
+```
+
+Finds:
+- Relevant files and patterns
+- Existing implementations
+- Technical constraints
+</Accordion>
+
+<Accordion title="3. sdd-propose" icon="lightbulb">
+Create change proposal with intent, scope, and approach.
+
+**Reads**: Exploration (optional)  
+**Writes**: Proposal artifact
+
+```bash
+# Usage
+/sdd-new add role-based access control
+```
+
+Includes:
+- **Intent**: What and why
+- **Scope**: Files and areas affected
+- **Approach**: Technical strategy
+- **Risks**: Known tradeoffs
+</Accordion>
+
+<Accordion title="4. sdd-spec" icon="file-lines">
+Write specifications with requirements and scenarios.
+
+**Reads**: Proposal (required)  
+**Writes**: Spec artifact
+
+```bash
+# Usage
+/sdd-continue
+```
+
+Defines:
+- Functional requirements
+- Edge cases and scenarios
+- Acceptance criteria
+- Non-functional requirements
+</Accordion>
+
+<Accordion title="5. sdd-design" icon="drafting-compass">
+Technical design with architecture decisions.
+
+**Reads**: Proposal (required)  
+**Writes**: Design artifact
+
+```bash
+# Usage
+/sdd-continue
+```
+
+Documents:
+- Component architecture
+- Data models
+- Integration points
+- Technology choices
+</Accordion>
+
+<Accordion title="6. sdd-tasks" icon="list-check">
+Break down a change into implementation tasks.
+
+**Reads**: Spec + Design (required)  
+**Writes**: Tasks artifact
+
+```bash
+# Usage
+/sdd-continue
+```
+
+Creates:
+- Ordered task list
+- Dependencies between tasks
+- Estimated complexity
+- Test requirements
+</Accordion>
+
+<Accordion title="7. sdd-apply" icon="code">
+Implement tasks following specs and design.
+
+**Reads**: Tasks + Spec + Design (required)  
+**Writes**: Apply progress artifact
+
+```bash
+# Usage
+/sdd-apply
+```
+
+Executes tasks in batches with checkpoint saves.
+</Accordion>
+
+<Accordion title="8. sdd-verify" icon="check">
+Validate implementation matches specs.
+
+**Reads**: Spec + Tasks (required)  
+**Writes**: Verification report
+
+```bash
+# Usage
+/sdd-verify
+```
+
+Checks:
+- All specs implemented
+- Tests passing
+- Edge cases covered
+- No regressions
+</Accordion>
+
+<Accordion title="9. sdd-archive" icon="box-archive">
+Sync delta specs to main specs and archive.
+
+**Reads**: All artifacts  
+**Writes**: Archive report
+
+```bash
+# Usage
+/sdd-archive
+```
+
+Finalizes:
+- Updates main specs
+- Archives change artifacts
+- Creates summary
+</Accordion>
+</AccordionGroup>
+
+## Orchestrator behavior
+
+<Warning>
+The orchestrator is a COORDINATOR, not an executor. It delegates ALL real work to sub-agents or skill phases.
+</Warning>
+
+### What the orchestrator does NOT do
+
+- Read source code to "understand" the codebase → delegate
+- Write or edit code → delegate
+- Write specs, proposals, designs, or task breakdowns → delegate
+- Do "quick" analysis inline "to save time" → bloats context, delegate instead
+
+### What the orchestrator DOES do
+
+- Answer short questions if it already knows
+- Coordinate phases and track state
+- Show summaries and ask user for decisions
+- Launch sub-agents with the right context
+
+## Persistence modes
+
+SDD supports multiple backends for artifact storage:
+
+| Mode | Storage | Use case |
+|------|---------|----------|
+| `engram` | Engram memory (default) | Cross-session persistence, no local files |
+| `openspec` | Local `openspec/` directory | File-based artifacts, shareable |
+| `hybrid` | Both Engram + OpenSpec | Maximum persistence + local artifacts |
+| `none` | Inline only | No persistence, results returned inline |
+
+<Info>
+Mode is determined by:
+1. Explicit user setting in `artifact_store.mode`
+2. Engram availability
+3. Fallback to `none` if neither configured
+</Info>
+
+## OpenCode slash commands
+
+<CodeGroup>
+
+```bash Initialize
+/sdd-init
+# Bootstrap SDD context
+```
+
+```bash Explore
+/sdd-explore <topic>
+# Investigate before committing
+```
+
+```bash New change
+/sdd-new <change>
+# Run explore + propose
+```
+
+```bash Continue
+/sdd-continue [change]
+# Create next missing artifact
+```
+
+```bash Fast-forward
+/sdd-ff [change]
+# Run propose -> spec -> design -> tasks
+```
+
+```bash Apply
+/sdd-apply [change]
+# Implement tasks in batches
+```
+
+```bash Verify
+/sdd-verify [change]
+# Validate implementation
+```
+
+```bash Archive
+/sdd-archive [change]
+# Sync and archive
+```
+
+</CodeGroup>
+
+## Configuration example
+
+```json OpenCode agent definition
+// ~/.config/opencode/opencode.json
+{
+  "agent": {
+    "sdd-orchestrator": {
+      "mode": "all",
+      "description": "Gentleman personality + SDD delegate-only orchestrator",
+      "prompt": "{file:./AGENTS.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    }
+  }
+}
+```
+
+## Sub-agent context protocol
+
+Sub-agents start with fresh context. The orchestrator controls access:
+
+### Non-SDD tasks (general delegation)
+
+- **Read context**: Orchestrator searches Engram and passes results in sub-agent prompt
+- **Write context**: Sub-agent saves discoveries/decisions to Engram via `mem_save`
+
+### SDD phases
+
+Each phase has explicit read/write rules:
+
+| Phase | Reads artifacts | Writes artifact |
+|-------|-----------------|------------------|
+| `sdd-explore` | Nothing | `explore` |
+| `sdd-propose` | Exploration (optional) | `proposal` |
+| `sdd-spec` | Proposal (required) | `spec` |
+| `sdd-design` | Proposal (required) | `design` |
+| `sdd-tasks` | Spec + Design (required) | `tasks` |
+| `sdd-apply` | Tasks + Spec + Design | `apply-progress` |
+| `sdd-verify` | Spec + Tasks | `verify-report` |
+| `sdd-archive` | All artifacts | `archive-report` |
+
+## Related components
+
+<CardGroup cols={2}>
+<Card title="Engram" icon="brain" href="/components/engram">
+  Persistent cross-session memory
+</Card>
+<Card title="Skills" icon="book" href="/components/skills">
+  Curated coding skill library
+</Card>
+</CardGroup>

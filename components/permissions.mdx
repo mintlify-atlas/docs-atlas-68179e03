@@ -1,0 +1,403 @@
+---
+title: "Permissions"
+description: "Security-first defaults and guardrails for AI agents"
+icon: "shield"
+---
+
+Permissions configures security-first defaults for your AI agent's tool usage. Sets auto-approval for safe operations and requires confirmation for destructive or risky commands.
+
+## What it does
+
+Permissions provides:
+- **Default approval mode**: Auto-approve safe operations without prompting
+- **Deny rules**: Block dangerous commands (e.g., `rm -rf /`, `.env` file access)
+- **Ask rules**: Require user confirmation for git push, force operations
+- **Read protection**: Prevent reading sensitive files (secrets, credentials)
+- **Bash granularity**: Per-command permission rules
+
+## Installation
+
+Permissions installs by merging security settings into your agent's config file (usually `settings.json` or `opencode.json`).
+
+<Warning>
+Permissions rules are **opt-in** per agent. Not all agents support granular permission controls. Some agents (like Cursor) use CLI flags instead of config files.
+</Warning>
+
+### What gets configured
+
+**Config File**
+- Claude Code: `~/.claude/settings.json` - `permissions` key
+- OpenCode: `~/.config/opencode/opencode.json` - `permission` key
+- Gemini CLI: `~/.gemini/settings.json` - `general.defaultApprovalMode`
+- VS Code Copilot: `%APPDATA%/Code/User/settings.json` - `chat.tools.autoApprove`
+- Cursor: No config file (uses CLI flags like `--auto-approve`)
+
+## Permission modes by agent
+
+<Tabs>
+<Tab title="Claude Code">
+### Claude Code Permissions
+
+**Default mode**: `bypassPermissions` (auto-accept all safe operations)
+
+**Deny rules**:
+- `rm -rf /` - System wipe
+- `sudo rm -rf /` - System wipe with elevated privileges
+- `.env` - Environment variable files with secrets
+
+**Config**:
+```json
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "deny": [
+      "rm -rf /",
+      "sudo rm -rf /",
+      ".env"
+    ]
+  }
+}
+```
+
+**Available modes**:
+- `acceptEdits` - Auto-accept file edits only
+- `bypassPermissions` - Auto-accept all safe operations
+- `default` - Prompt for everything
+- `dontAsk` - Never prompt (dangerous)
+- `plan` - Show plan before executing
+
+</Tab>
+
+<Tab title="OpenCode">
+### OpenCode Permissions
+
+**Bash permissions**: Granular per-command rules
+- `*`: `allow` (default allow all bash)
+- Git operations: `ask` (require confirmation)
+- Destructive git: `ask` (rebase, reset --hard, push --force)
+
+**Read permissions**: File pattern protection
+- `*`: `allow` (default allow all reads)
+- `.env*` files: `deny`
+- Secrets directories: `deny`
+- Credentials files: `deny`
+
+**Config**:
+```json
+{
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "git commit *": "ask",
+      "git push *": "ask",
+      "git push": "ask",
+      "git push --force *": "ask",
+      "git rebase *": "ask",
+      "git reset --hard *": "ask"
+    },
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "**/.env": "deny",
+      "**/.env.*": "deny",
+      "**/secrets/**": "deny",
+      "**/credentials.json": "deny"
+    }
+  }
+}
+```
+
+**Permission values**:
+- `allow` - Auto-approve without prompt
+- `ask` - Require user confirmation
+- `deny` - Block operation, show error
+
+</Tab>
+
+<Tab title="Gemini CLI">
+### Gemini CLI Permissions
+
+**Default approval mode**: `yolo` (auto-approve all tool calls)
+
+**Config**:
+```json
+{
+  "general": {
+    "defaultApprovalMode": "yolo"
+  }
+}
+```
+
+**Available modes**:
+- `yolo` - Auto-approve all
+- `ask` - Prompt for each tool
+- `deny` - Reject all (read-only mode)
+
+<Note>
+Gemini CLI does not support per-command granularity. It's all-or-nothing approval.
+</Note>
+
+</Tab>
+
+<Tab title="VS Code Copilot">
+### VS Code Copilot Permissions
+
+**Auto-approve**: Enabled for chat tools
+
+**Config**:
+```json
+{
+  "chat.tools.autoApprove": true
+}
+```
+
+**Values**:
+- `true` - Auto-approve tool calls in chat
+- `false` - Prompt for confirmation
+
+<Info>
+VS Code Copilot does not support deny rules or per-tool granularity. Auto-approve applies to all tools.
+</Info>
+
+</Tab>
+
+<Tab title="Cursor">
+### Cursor Permissions
+
+Cursor manages permissions via **CLI config** and runtime flags, not `settings.json`.
+
+<Warning>
+Gentle AI does **not** configure Cursor permissions. Use Cursor's built-in permission system or CLI flags:
+
+```bash
+cursor --auto-approve
+cursor --require-approval
+```
+</Warning>
+
+Cursor stores permission state in `~/.cursor/cli-config.json` but this is managed by Cursor itself.
+
+</Tab>
+</Tabs>
+
+## Security philosophy
+
+### What's auto-approved
+
+<CardGroup cols={2}>
+<Card title="Safe reads" icon="book-open">
+- Reading source code files
+- Listing directories
+- Checking git status
+- Viewing diffs
+</Card>
+
+<Card title="Safe writes" icon="pen">
+- Creating/editing code files
+- Running tests
+- Running builds (non-destructive)
+- Creating branches
+</Card>
+
+<Card title="Safe bash" icon="terminal">
+- `ls`, `cat`, `grep`, `find`
+- `npm install`, `go mod tidy`
+- `git status`, `git diff`, `git log`
+- `make test`, `npm test`
+</Card>
+
+<Card title="Safe tools" icon="wrench">
+- File operations (read, write, edit)
+- Search (grep, glob)
+- Non-destructive bash commands
+</Card>
+</CardGroup>
+
+### What requires confirmation
+
+<CardGroup cols={2}>
+<Card title="Git operations" icon="code-branch">
+- `git commit` - Commits to history
+- `git push` - Pushes to remote
+- `git push --force` - Force push (dangerous)
+- `git rebase` - History rewrite
+- `git reset --hard` - Destructive reset
+</Card>
+
+<Card title="Destructive commands" icon="triangle-exclamation">
+- `rm -rf` - Recursive delete
+- `sudo` commands - Elevated privileges
+- System file edits - `/etc/`, `/usr/`
+</Card>
+</CardGroup>
+
+### What's blocked
+
+<CardGroup cols={2}>
+<Card title="Secrets" icon="key">
+- `.env` files
+- `.env.*` files (`.env.local`, `.env.production`)
+- `**/secrets/**` directories
+- `credentials.json` files
+</Card>
+
+<Card title="System destruction" icon="bomb">
+- `rm -rf /` - Root filesystem wipe
+- `sudo rm -rf /` - Root wipe with privileges
+</Card>
+</CardGroup>
+
+## Best practices
+
+<Steps>
+<Step title="Use auto-approve for productivity">
+Auto-approval speeds up development without compromising safety. Most operations (reading, writing, testing) are safe.
+
+```json
+// Recommended: Auto-approve with deny rules
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "deny": ["rm -rf /", ".env"]
+  }
+}
+```
+</Step>
+
+<Step title="Protect secrets aggressively">
+Always deny access to secret files. Use patterns to catch variations:
+
+```json
+{
+  "read": {
+    "*.env": "deny",
+    "*.env.*": "deny",
+    "**/.env": "deny",
+    "**/.env.*": "deny",
+    "**/secrets/**": "deny"
+  }
+}
+```
+</Step>
+
+<Step title="Ask for git push operations">
+Require confirmation for git operations that affect remote state:
+
+```json
+{
+  "bash": {
+    "git commit *": "ask",
+    "git push *": "ask",
+    "git push --force *": "ask"
+  }
+}
+```
+</Step>
+
+<Step title="Review deny rules periodically">
+As your project evolves, update deny rules:
+- Add patterns for new secret files
+- Block access to production config directories
+- Deny destructive operations specific to your stack
+</Step>
+</Steps>
+
+## Troubleshooting
+
+### Agent prompts too often
+
+If your agent asks for permission on every operation:
+
+```json
+// Switch to auto-approve mode
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  }
+}
+```
+
+### Agent reads secrets despite deny rule
+
+Check that:
+1. File pattern matches exactly (test with glob)
+2. Agent config reloaded (restart agent)
+3. Rule is in the correct config file
+
+```bash
+# Test glob pattern
+ls **/.env
+ls **/.env.*
+```
+
+### Git push blocked unexpectedly
+
+If git push is blocked when you want to allow it:
+
+```json
+// Change from deny to ask
+{
+  "bash": {
+    "git push *": "ask"  // Was "deny"
+  }
+}
+```
+
+## Configuration examples
+
+<CodeGroup>
+
+```json Claude Code (strict)
+{
+  "permissions": {
+    "defaultMode": "plan",
+    "deny": [
+      "rm -rf /",
+      "sudo rm -rf /",
+      ".env",
+      "git push --force"
+    ]
+  }
+}
+```
+
+```json OpenCode (balanced)
+{
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "git commit *": "ask",
+      "git push *": "ask",
+      "git push --force *": "deny",
+      "rm -rf *": "ask"
+    },
+    "read": {
+      "*": "allow",
+      "**/.env*": "deny",
+      "**/secrets/**": "deny"
+    }
+  }
+}
+```
+
+```json Gemini CLI (permissive)
+{
+  "general": {
+    "defaultApprovalMode": "yolo"
+  }
+}
+```
+
+</CodeGroup>
+
+## Related components
+
+<CardGroup cols={2}>
+<Card title="Persona" icon="user-tie" href="/components/persona">
+  Behavior mode configuration
+</Card>
+<Card title="GGA" icon="shield-halved" href="/components/gga">
+  AI provider switcher with guardrails
+</Card>
+</CardGroup>

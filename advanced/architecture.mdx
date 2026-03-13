@@ -1,0 +1,301 @@
+---
+title: 'System Architecture'
+description: 'Internal structure, package organization, and design patterns'
+---
+
+## Overview
+
+Gentle AI is a multi-agent ecosystem configurator built in Go. It orchestrates the installation and configuration of AI development tools across different platforms using a **staged execution pipeline** with dependency resolution, backup/restore, and health verification.
+
+## Package Structure
+
+```
+cmd/gentle-ai/             CLI entrypoint
+internal/
+  app/                     Command dispatch + runtime wiring
+  model/                   Domain types (agents, components, skills, presets, personas)
+  catalog/                 Registry definitions (agents, skills, components)
+  system/                  OS/distro detection, dependency checks, platform guards
+  cli/                     Install flags, validation, orchestration, dry-run
+  planner/                 Dependency graph, resolution, ordering, review payloads
+  installcmd/              Profile-aware command resolver (brew/apt/pacman/winget/go install)
+  pipeline/                Staged execution + rollback orchestration
+  backup/                  Config snapshot + restore
+  assets/                  Embedded skill files + persona templates
+  components/              Per-component install/inject logic
+    engram/  sdd/  skills/  mcp/  persona/  theme/  permissions/  gga/
+    filemerge/             Marker-based file merging (inject without clobbering)
+  agents/                  Agent adapters (config strategy per agent)
+    claude/  opencode/  gemini/  cursor/  vscode/
+  verify/                  Post-apply health checks + reporting
+  tui/                     Bubbletea TUI (Rose Pine theme)
+    styles/  screens/
+scripts/                   Installer scripts (bash + PowerShell)
+e2e/                       Docker-based E2E tests (Ubuntu + Arch)
+testdata/                  Golden test fixtures
+```
+
+See the source at `/home/daytona/workspace/source/internal/app/app.go:25`
+
+## Core Design Patterns
+
+### Adapter Pattern for Agent Support
+
+Every AI agent implements the `Adapter` interface, making it trivial to add new agents without modifying component code:
+
+```go
+type Adapter interface {
+    Agent() model.AgentID
+    Tier() model.SupportTier
+    Detect(ctx context.Context, homeDir string) (installed bool, binaryPath string, configPath string, configFound bool, err error)
+    GlobalConfigDir(homeDir string) string
+    SystemPromptDir(homeDir string) string
+    SkillsDir(homeDir string) string
+    SystemPromptStrategy() model.SystemPromptStrategy
+    MCPStrategy() model.MCPStrategy
+    // ... more methods
+}
+```
+
+See `/home/daytona/workspace/source/internal/agents/interface.go:20`
+
+Each agent adapter provides:
+- **Detection logic**: How to find the agent on the system
+- **Path resolution**: Where to write configs, skills, MCP settings
+- **Strategy patterns**: How to inject system prompts and MCP servers
+
+Adapters exist for:
+- Claude Code (`internal/agents/claude/`)
+- OpenCode (`internal/agents/opencode/`)
+- Gemini CLI (`internal/agents/gemini/`)
+- Cursor (`internal/agents/cursor/`)
+- VS Code Copilot (`internal/agents/vscode/`)
+
+### Dependency Resolution
+
+The **planner** package implements topological sorting to resolve component dependencies:
+
+```go
+type Resolver interface {
+    Resolve(selection model.Selection) (ResolvedPlan, error)
+}
+```
+
+See `/home/daytona/workspace/source/internal/planner/resolver.go:14`
+
+1. User selects components (e.g., `sdd`, `skills`, `engram`)
+2. Resolver expands dependencies recursively
+3. Topological sort determines installation order
+4. Plan includes both explicit selections and implicit dependencies
+
+This ensures components install in the correct order even when they depend on each other.
+
+### Staged Execution Pipeline
+
+The **pipeline** orchestrates installation in phases:
+
+```go
+type StagePlan struct {
+    Prepare []Step
+    Apply   []Step
+}
+
+type Orchestrator struct {
+    runner   Runner
+    policy   RollbackPolicy
+    stepByID map[string]Step
+}
+```
+
+See `/home/daytona/workspace/source/internal/pipeline/orchestrator.go:20`
+
+**Execution flow:**
+
+1. **Prepare Stage**: Validate preconditions, check dependencies, create backups
+2. **Apply Stage**: Install binaries, write configs, inject components
+3. **Rollback** (on failure): Restore from backup if apply fails
+
+Each step implements:
+
+```go
+type Step interface {
+    ID() string
+    Run() error
+}
+
+type RollbackStep interface {
+    Step
+    Rollback() error
+}
+```
+
+See `/home/daytona/workspace/source/internal/pipeline/stages.go:11`
+
+### Platform Detection
+
+The **system** package detects OS, architecture, package managers, and available tools:
+
+```go
+type PlatformProfile struct {
+    OS             string
+    LinuxDistro    string
+    PackageManager string
+    NpmWritable    bool
+    Supported      bool
+}
+```
+
+See `/home/daytona/workspace/source/internal/system/detect.go:19`
+
+Platform detection:
+- **macOS**: Uses Homebrew
+- **Linux**: Detects distro via `/etc/os-release`, uses apt/pacman/brew
+- **Windows**: Uses winget
+- **WSL**: Detected via `/proc/version` inspection
+
+Supported distros:
+- Ubuntu/Debian (via apt)
+- Arch/Manjaro (via pacman)
+- Derivatives detected via `ID_LIKE` in os-release
+
+### File Merge Strategy
+
+The **filemerge** package enables non-destructive config injection:
+
+```go
+type SectionWriter interface {
+    InjectSection(filePath string, section Section) error
+}
+```
+
+Instead of replacing entire config files, sections are marked with delimiters:
+
+```
+# BEGIN GENTLE-AI:component-id
+[injected content]
+# END GENTLE-AI:component-id
+```
+
+This allows:
+- Preserving user customizations
+- Idempotent updates (re-running doesn't duplicate)
+- Clean uninstall (remove sections by marker)
+
+## Component Architecture
+
+Each component (engram, sdd, skills, etc.) implements:
+
+```go
+func Install(ctx context.Context, selection model.Selection, agent model.AgentID, homeDir string) error
+func InstallCommand(profile system.PlatformProfile) ([][]string, error)
+```
+
+Components are self-contained:
+- **engram**: Installs binary, starts server, configures MCP integration
+- **sdd**: Copies 9 skill files, injects orchestrator into system prompt
+- **skills**: Copies coding skill library based on preset
+- **mcp**: Configures Context7 and other MCP servers
+- **gga**: Installs binary, sets up git hooks, configures provider
+- **persona**: Injects behavior mode into system prompt
+- **permissions**: Sets security defaults
+- **theme**: Applies visual customizations
+
+## Data Flow
+
+### Installation Flow
+
+```
+User Selection
+     ↓
+Dependency Resolver → ResolvedPlan
+     ↓
+Stage Planner → StagePlan (Prepare + Apply steps)
+     ↓
+Orchestrator.Execute()
+     ↓
+  ┌─Prepare Stage (validate, backup)
+  └─Apply Stage (install, configure)
+     ↓
+Verification (health checks)
+     ↓
+Complete (show next steps)
+```
+
+### Agent Configuration Flow
+
+```
+for each selected agent:
+    adapter = GetAdapter(agentID)
+    
+    configDir = adapter.GlobalConfigDir(homeDir)
+    skillsDir = adapter.SkillsDir(homeDir)
+    
+    components.engram.ConfigureAgent(adapter, ...)
+    components.sdd.InjectSkills(skillsDir, ...)
+    components.persona.InjectSystemPrompt(adapter.SystemPromptStrategy(), ...)
+    components.mcp.ConfigureMCP(adapter.MCPStrategy(), ...)
+    
+    verify.CheckAgent(adapter)
+```
+
+## Extension Points
+
+### Adding a New Agent
+
+1. Create adapter in `internal/agents/<agent>/`:
+   ```go
+   type Adapter struct{}
+   func (a Adapter) Agent() model.AgentID { return "my-agent" }
+   // ... implement interface
+   ```
+
+2. Register in `internal/agents/registry.go`:
+   ```go
+   agentRegistry["my-agent"] = myagent.Adapter{}
+   ```
+
+3. Done! Components automatically support it via the adapter interface.
+
+### Adding a New Component
+
+1. Create package in `internal/components/<name>/`
+2. Implement `Install()` and `InstallCommand()` functions
+3. Add to `internal/catalog/components.go`
+4. Define dependencies in component graph
+
+### Adding a New Platform
+
+1. Add platform detection in `internal/system/detect.go`
+2. Add package manager support in `internal/installcmd/resolver.go`
+3. Add install hints in `internal/system/deps.go`
+
+## Key Architectural Decisions
+
+<CardGroup cols={2}>
+  <Card title="Interface-Based Design" icon="puzzle-piece">
+    Agent adapters use interfaces, not switch statements. Adding support for a new AI agent requires zero changes to component code.
+  </Card>
+  
+  <Card title="Staged Execution" icon="layer-group">
+    Prepare-Apply-Rollback stages ensure atomic operations. If installation fails, backups restore the previous state.
+  </Card>
+  
+  <Card title="Concurrent Dependency Detection" icon="bolt">
+    System dependency checks run concurrently using goroutines for fast startup.
+  </Card>
+  
+  <Card title="Embedded Assets" icon="box">
+    Skills, personas, and templates are embedded in the binary at build time using `go:embed`, eliminating runtime dependencies.
+  </Card>
+</CardGroup>
+
+## Performance Considerations
+
+- **Concurrent detection**: System scans run in parallel (see `internal/system/deps.go:98`)
+- **Lazy initialization**: Adapters created only for selected agents
+- **Streaming progress**: TUI receives real-time updates via callbacks
+- **Minimal I/O**: Config files read once, written once per component
+
+## Testing Architecture
+
+See [Testing Strategy](/advanced/testing) for details on unit, integration, and E2E tests.

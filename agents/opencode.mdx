@@ -1,0 +1,334 @@
+---
+title: OpenCode
+description: Anomaly's open-source CLI agent with slash command support
+---
+
+OpenCode is Anomaly's open-source command-line coding agent. It receives full Gentleman stack support, including the exclusive **Slash Commands** feature.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Skills" icon="book-open">
+    Full SDD workflow + foundation skills loaded from `~/.config/opencode/skills/`
+  </Card>
+  <Card title="MCP Servers" icon="server">
+    Context7 and custom servers merged into `opencode.json`
+  </Card>
+  <Card title="Sub-agents" icon="users">
+    Task tool with specialized agents (doc-reader, doc-author, search, etc.)
+  </Card>
+  <Card title="Slash Commands" icon="slash">
+    Exclusive feature — custom commands in `~/.config/opencode/commands/`
+  </Card>
+</CardGroup>
+
+## Installation
+
+OpenCode can be auto-installed by Gentle AI:
+
+```bash
+gentle-ai install --agent opencode --preset full-gentleman
+```
+
+This installs OpenCode via npm and configures the full ecosystem.
+
+### Manual Installation
+
+If you prefer to install OpenCode manually:
+
+```bash
+# Install OpenCode
+npm install -g @anomalyco/opencode
+
+# Then configure with Gentle AI
+gentle-ai install --agent opencode --preset full-gentleman
+```
+
+## Configuration
+
+### Config Directory
+
+All OpenCode configuration lives in `~/.config/opencode/`:
+
+```
+~/.config/opencode/
+├── AGENTS.md              # System prompt (Gentleman persona + SDD orchestrator)
+├── opencode.json          # OpenCode settings + MCP config
+├── skills/                # Skill files (SDD + foundation)
+│   ├── sdd-init.md
+│   ├── sdd-propose.md
+│   ├── go-testing.md
+│   └── ...
+└── commands/              # Slash commands (optional)
+    └── gentleman.md
+```
+
+### Windows Config Path
+
+```powershell
+%USERPROFILE%\.config\opencode\
+```
+
+## System Prompt Strategy
+
+OpenCode uses **file replacement** for system prompt:
+
+- System prompt file: `~/.config/opencode/AGENTS.md`
+- Gentle AI writes the full system prompt on every update
+- Previous content is backed up before replacement
+- No marker-based merging — full file control
+
+### Example Structure
+
+```markdown
+# OpenCode System Prompt
+
+## Gentleman Persona
+
+You are a teaching-oriented coding mentor...
+
+## SDD Orchestrator
+
+Spec-Driven Development workflow with 9 phases...
+
+## Skills
+
+You have access to the following skills:
+- sdd-init: Bootstrap SDD context
+- sdd-propose: Create change proposals
+...
+```
+
+## MCP Configuration
+
+OpenCode uses **settings merge** for MCP:
+
+- Config file: `~/.config/opencode/opencode.json`
+- MCP config is merged into the `mcpServers` section
+- Existing settings are preserved
+- Gentle AI only updates MCP-related keys
+
+### Context7 Configuration
+
+Gentle AI installs Context7 MCP server:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"]
+    }
+  }
+}
+```
+
+## Slash Commands
+
+**Slash Commands** are an OpenCode exclusive feature. They allow you to define custom commands that execute predefined workflows.
+
+### How It Works
+
+- Commands are markdown files in `~/.config/opencode/commands/`
+- Invoke with `/command-name` in the chat
+- OpenCode executes the command instructions
+
+### Creating Custom Commands
+
+Create a new command file:
+
+```bash
+touch ~/.config/opencode/commands/refactor.md
+```
+
+Define the command:
+
+```markdown
+# Refactor Command
+
+When the user invokes `/refactor`:
+
+1. Analyze the current file or selection
+2. Identify code smells and anti-patterns
+3. Propose refactoring improvements
+4. Ask for confirmation before applying changes
+```
+
+Use it:
+
+```bash
+/refactor
+```
+
+## Sub-agent Support
+
+OpenCode uses the **Task tool** for sub-agent delegation:
+
+- **Specialized agents** — doc-reader, doc-author, search, file-explorer, etc.
+- **Sequential execution** — Tasks run in order (no parallel execution)
+- **Scoped context** — Each sub-agent has isolated context
+
+### Available Sub-agents
+
+- `doc-reader` — Read and navigate external documentation
+- `doc-author` — Write and maintain documentation
+- `search` — Multi-round grep and glob operations
+- `file-explorer` — Navigate large codebases
+
+### How Sub-agents Work
+
+1. Main agent receives a request (e.g., "document the API")
+2. Agent invokes Task tool with `doc-author` sub-agent
+3. Sub-agent executes in isolated context
+4. Results return to main agent
+5. Main agent continues with enriched context
+
+## Skills
+
+All 11 curated skills are installed:
+
+### SDD Workflow (9 skills)
+
+- `sdd-init` — Bootstrap SDD context
+- `sdd-explore` — Investigate codebase
+- `sdd-propose` — Create change proposals
+- `sdd-spec` — Write specifications
+- `sdd-design` — Technical design
+- `sdd-tasks` — Break down implementation
+- `sdd-apply` — Implement tasks
+- `sdd-verify` — Validate implementation
+- `sdd-archive` — Sync specs and archive
+
+### Foundation Skills (2 skills)
+
+- `go-testing` — Go testing patterns (including Bubbletea TUI testing)
+- `skill-creator` — Create new skills following the Agent Skills spec
+
+Skills are loaded from `~/.config/opencode/skills/` as markdown files.
+
+## What Gentle AI Installs
+
+When you run `gentle-ai install --agent opencode --preset full-gentleman`:
+
+1. **Installs OpenCode** via npm (if not already installed)
+2. **Creates config directory** at `~/.config/opencode/`
+3. **Writes system prompt** to `AGENTS.md` with Gentleman persona + SDD orchestrator
+4. **Installs 11 skill files** in `~/.config/opencode/skills/`
+5. **Configures Context7 MCP server** in `opencode.json`
+6. **Installs GGA binary** globally (opt-in per project with `gga init`)
+7. **Creates commands directory** for slash commands
+
+## Platform Notes
+
+### macOS
+
+```bash
+brew tap Gentleman-Programming/homebrew-tap
+brew install gentle-ai
+gentle-ai install --agent opencode --preset full-gentleman
+```
+
+### Linux
+
+```bash
+# Ubuntu/Debian
+sudo apt install npm
+npm install -g @anomalyco/opencode
+gentle-ai install --agent opencode --preset full-gentleman
+
+# Arch
+sudo pacman -S npm
+npm install -g @anomalyco/opencode
+gentle-ai install --agent opencode --preset full-gentleman
+```
+
+### Windows
+
+```powershell
+# Install Node.js if not present
+winget install OpenJS.NodeJS
+
+# Install OpenCode
+npm install -g @anomalyco/opencode
+
+# Configure with Gentle AI
+gentle-ai.exe install --agent opencode --preset full-gentleman
+```
+
+Config lives in `%USERPROFILE%\.config\opencode\`
+
+## Verification
+
+After installation, verify the configuration:
+
+```bash
+# Check OpenCode is installed
+opencode --version
+
+# Check config directory exists
+ls ~/.config/opencode/
+
+# Check skills are installed
+ls ~/.config/opencode/skills/
+
+# Check MCP is configured
+cat ~/.config/opencode/opencode.json | grep context7
+
+# Check system prompt
+cat ~/.config/opencode/AGENTS.md
+```
+
+## Troubleshooting
+
+### OpenCode Not Found
+
+If `opencode` command is not found after installation:
+
+```bash
+# Check npm global bin path
+npm bin -g
+
+# Add to PATH (add to ~/.bashrc or ~/.zshrc)
+export PATH="$(npm bin -g):$PATH"
+```
+
+### MCP Server Not Loading
+
+If Context7 doesn't load:
+
+1. Check `~/.config/opencode/opencode.json` exists
+2. Verify MCP section is present: `cat ~/.config/opencode/opencode.json | grep mcpServers`
+3. Test server manually: `npx -y @context7/mcp-server`
+
+### Skills Not Available
+
+If skills aren't loading:
+
+1. Check `~/.config/opencode/skills/` directory exists
+2. Verify skill files are markdown: `ls ~/.config/opencode/skills/*.md`
+3. Check system prompt references skills: `grep -i skill ~/.config/opencode/AGENTS.md`
+
+### Slash Commands Not Working
+
+If custom commands aren't recognized:
+
+1. Check `~/.config/opencode/commands/` directory exists
+2. Verify command files are markdown: `ls ~/.config/opencode/commands/*.md`
+3. Restart OpenCode session to reload commands
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Claude Code" icon="code" href="/agents/claude-code">
+    Alternative CLI agent with output styles
+  </Card>
+  <Card title="Skills Reference" icon="book" href="/components/skills">
+    Learn about the 11 curated skills
+  </Card>
+  <Card title="SDD Workflow" icon="diagram-project" href="/components/sdd">
+    Deep dive into Spec-Driven Development
+  </Card>
+  <Card title="MCP Servers" icon="server" href="/components/context7">
+    Explore Model Context Protocol integration
+  </Card>
+</CardGroup>

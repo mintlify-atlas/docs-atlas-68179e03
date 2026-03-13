@@ -1,0 +1,127 @@
+---
+title: 'Agent Support Overview'
+description: 'All supported AI coding agents and their capabilities'
+---
+
+Gentle AI configures multiple AI coding agents with the Gentleman stack. Each agent receives memory, skills, workflow orchestration, and MCP tools — turning basic coding assistants into powerful development partners.
+
+## Supported Agents
+
+<CardGroup cols={2}>
+  <Card title="Claude Code" icon="code" href="/agents/claude-code">
+    Full support with output styles, MCP, skills, and sub-agents
+  </Card>
+  <Card title="OpenCode" icon="terminal" href="/agents/opencode">
+    Full support with slash commands, MCP, skills, and sub-agents
+  </Card>
+  <Card title="Gemini CLI" icon="gem" href="/agents/gemini-cli">
+    CLI-based agent with experimental sub-agent support
+  </Card>
+  <Card title="Cursor" icon="cursor" href="/agents/cursor">
+    Desktop IDE with async sub-agents and nested delegation
+  </Card>
+  <Card title="VS Code Copilot" icon="code-compare" href="/agents/vscode-copilot">
+    GitHub Copilot integration with parallel sub-agents
+  </Card>
+</CardGroup>
+
+## Feature Matrix
+
+All agents receive the **full SDD orchestrator** (agent-teams-lite) injected into their system prompt. Every agent supports sub-agent delegation natively, enabling the full SDD orchestration workflow with parallel sub-agents.
+
+| Feature | Claude Code | OpenCode | Gemini CLI | Cursor | VS Code Copilot |
+|---------|-------------|----------|------------|--------|----------------|
+| **Skills** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **MCP** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Sub-agents** | ✅ | ✅ | ✅ (experimental) | ✅ (async) | ✅ (parallel) |
+| **Output Styles** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Slash Commands** | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Auto-Install** | ✅ | ✅ | ✅ | ❌ (desktop) | ❌ (desktop) |
+
+## What Gets Installed
+
+Every agent receives:
+
+### Core Components
+
+- **Engram** — Persistent cross-session memory
+- **SDD Orchestrator** — Full 9-phase Spec-Driven Development workflow
+- **Skills Library** — 11 curated skill files (SDD workflow + foundation skills)
+- **Context7 MCP Server** — Real-time framework/library documentation
+- **Persona** — Teaching-oriented Gentleman persona (or neutral/custom)
+- **Permissions** — Security-first defaults and guardrails
+
+### Optional Components
+
+- **GGA** — Gentleman Guardian Angel AI provider switcher (opt-in per project)
+- **Theme** — Gentleman Kanagawa theme overlay
+
+## Installation Method
+
+### CLI Agents (auto-installable)
+
+- **Claude Code** — `npm install -g @anthropic/claude-code`
+- **OpenCode** — `npm install -g @anomalyco/opencode`
+- **Gemini CLI** — `npm install -g @google/gemini-cli`
+
+### Desktop Agents (manual install)
+
+- **Cursor** — Download from [cursor.sh](https://cursor.sh)
+- **VS Code Copilot** — Install VS Code + GitHub Copilot extension
+
+Gentle AI detects which agents are installed and configures them automatically. For desktop agents, install them first, then run `gentle-ai`.
+
+## Config Strategy
+
+Each agent has unique configuration requirements:
+
+| Agent | System Prompt | MCP Config | Skills Dir |
+|-------|---------------|------------|------------|
+| Claude Code | `~/.claude/CLAUDE.md` | Separate files in `~/.claude/mcp/` | `~/.claude/skills/` |
+| OpenCode | `~/.config/opencode/AGENTS.md` | Merged into `opencode.json` | `~/.config/opencode/skills/` |
+| Gemini CLI | `~/.gemini/GEMINI.md` | Merged into `settings.json` | `~/.gemini/skills/` |
+| Cursor | `~/.cursor/rules/gentle-ai.mdc` | Single `mcp.json` file | `~/.cursor/skills/` |
+| VS Code Copilot | `Code/User/prompts/gentle-ai.instructions.md` | `Code/User/mcp.json` | `~/.copilot/skills/` |
+
+## Sub-agent Capabilities
+
+All agents support sub-agent delegation, but implementation varies:
+
+<CardGroup cols={2}>
+  <Card title="Claude Code" icon="layer-group">
+    Native sub-agent support with parallel execution and custom agent definitions
+  </Card>
+  <Card title="OpenCode" icon="sitemap">
+    Task tool with specialized agents (doc-reader, doc-author, search, etc.)
+  </Card>
+  <Card title="Gemini CLI" icon="flask">
+    Experimental agents defined as markdown files in `~/.gemini/agents/`
+  </Card>
+  <Card title="Cursor" icon="network-wired">
+    Async sub-agents (v2.5+) with background execution and nested trees
+  </Card>
+  <Card title="VS Code Copilot" icon="code-branch">
+    `runSubagent` tool with parallel execution and custom definitions
+  </Card>
+</CardGroup>
+
+## Platform Support
+
+All agents work on:
+
+- **macOS** (Apple Silicon + Intel)
+- **Linux** (Ubuntu/Debian, Arch, derivatives)
+- **Windows 10/11**
+
+Platform-specific paths are handled automatically. See individual agent pages for Windows-specific notes.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Install Guide" icon="download" href="/installation">
+    Install Gentle AI and configure your agents
+  </Card>
+  <Card title="Skills Reference" icon="book" href="/components/skills">
+    Explore the 11 curated skills available to all agents
+  </Card>
+</CardGroup>

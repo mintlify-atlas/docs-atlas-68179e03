@@ -1,0 +1,486 @@
+---
+title: "SDD Workflow"
+description: "The 9-phase Spec-Driven Development workflow for planning before coding"
+icon: "diagram-project"
+---
+
+Spec-Driven Development (SDD) is a structured workflow that ensures you **plan before you code**. Instead of jumping straight into implementation, SDD guides you through exploration, specification, design, and verification phases.
+
+## Why SDD?
+
+Traditional "code-first" approaches often lead to:
+
+- Unclear requirements discovered mid-implementation
+- Design decisions made reactively under pressure
+- Implementation drift from original intent
+- Verification happening too late (or not at all)
+
+**SDD flips this**: You think, plan, and document BEFORE writing code. This leads to:
+
+- Clear specifications that serve as acceptance criteria
+- Thoughtful design decisions with documented rationale
+- Implementations that match specs (verified automatically)
+- An audit trail for every change
+
+## The 9-Phase Workflow
+
+<Steps>
+<Step title="Phase 0: Initialize (sdd-init)">
+  **Bootstrap SDD context in your project**
+  
+  The initialization phase detects your project's:
+  - Tech stack (package.json, go.mod, pyproject.toml)
+  - Existing conventions (linters, test frameworks, CI)
+  - Architecture patterns
+  
+  **Outputs**:
+  - `openspec/config.yaml` with project context (file-based mode)
+  - Engram observation with project context (memory-based mode)
+  - `.atl/skill-registry.md` with available skills
+  
+  **Trigger**: Run when starting SDD in a new project
+  
+  ```bash
+  # Via agent command
+  /sdd-init
+  
+  # Or natural language
+  "Initialize SDD in this project"
+  ```
+</Step>
+
+<Step title="Phase 1: Explore (sdd-explore)">
+  **Investigate the codebase before committing to a change**
+  
+  Exploration is RESEARCH — you:
+  - Understand current architecture and patterns
+  - Identify affected files and modules
+  - Compare multiple approaches
+  - Surface risks and constraints
+  
+  **Outputs**:
+  - `exploration.md` with analysis (file-based)
+  - Engram observation (memory-based)
+  - Recommendation on which approach to take
+  
+  **Trigger**: Before proposing any significant change
+  
+  ```bash
+  /sdd-explore "add authentication middleware"
+  ```
+</Step>
+
+<Step title="Phase 2: Propose (sdd-propose)">
+  **Create a change proposal with intent, scope, and approach**
+  
+  A proposal captures:
+  - **Intent** - What problem are we solving?
+  - **Scope** - What's in/out of this change?
+  - **Approach** - How will we solve it?
+  - **Risks** - What could go wrong?
+  - **Rollback plan** - How to revert if needed
+  
+  **Outputs**:
+  - `openspec/changes/{change-name}/proposal.md` (file-based)
+  - Engram observation `sdd/{change-name}/proposal` (memory-based)
+  
+  **Trigger**: After exploration, before writing specs
+  
+  ```bash
+  /sdd-propose "add-auth-middleware"
+  ```
+</Step>
+
+<Step title="Phase 3: Specify (sdd-spec)">
+  **Write specifications with requirements and scenarios**
+  
+  Specs describe WHAT the system must do (not HOW):
+  - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  - Write Given/When/Then scenarios
+  - Cover happy paths AND edge cases
+  - Create DELTA specs (ADDED/MODIFIED/REMOVED)
+  
+  **Outputs**:
+  - `openspec/changes/{change-name}/specs/{domain}/spec.md` (file-based)
+  - Engram observation `sdd/{change-name}/spec` (memory-based)
+  
+  **Example Requirement**:
+  
+  ```markdown
+  ### Requirement: JWT Validation
+  
+  The system MUST validate JWT tokens on protected routes.
+  
+  #### Scenario: Valid token grants access
+  
+  - GIVEN a valid JWT token in the Authorization header
+  - WHEN a request is made to a protected route
+  - THEN the request proceeds to the handler
+  - AND the user context is populated from token claims
+  
+  #### Scenario: Invalid token returns 401
+  
+  - GIVEN an invalid or expired JWT token
+  - WHEN a request is made to a protected route
+  - THEN the request returns 401 Unauthorized
+  - AND the response includes an error message
+  ```
+</Step>
+
+<Step title="Phase 4: Design (sdd-design)">
+  **Create technical design with architecture decisions**
+  
+  Design captures HOW the change will be implemented:
+  - Architecture decisions with rationale
+  - Data flow diagrams
+  - File changes (create/modify/delete)
+  - Interfaces and contracts
+  - Testing strategy
+  
+  **Outputs**:
+  - `openspec/changes/{change-name}/design.md` (file-based)
+  - Engram observation `sdd/{change-name}/design` (memory-based)
+  
+  **Example Decision**:
+  
+  ```markdown
+  ### Decision: Use middleware pattern for JWT validation
+  
+  **Choice**: Implement JWT validation as HTTP middleware
+  
+  **Alternatives considered**:
+  - Validate in each handler (rejected - too much duplication)
+  - Use decorator pattern (rejected - not idiomatic in Go)
+  
+  **Rationale**: Middleware is idiomatic in Go HTTP servers,
+  provides clear separation of concerns, and allows easy
+  composition with other middleware.
+  ```
+</Step>
+
+<Step title="Phase 5: Task Breakdown (sdd-tasks)">
+  **Break down the change into implementation tasks**
+  
+  Tasks are concrete, actionable steps:
+  - Specific (exact file paths and changes)
+  - Small (completable in one session)
+  - Ordered (by dependency)
+  - Testable (verifiable outcomes)
+  
+  Organized by phase:
+  - Phase 1: Foundation/Infrastructure
+  - Phase 2: Core Implementation
+  - Phase 3: Integration/Wiring
+  - Phase 4: Testing
+  - Phase 5: Cleanup/Documentation
+  
+  **Outputs**:
+  - `openspec/changes/{change-name}/tasks.md` (file-based)
+  - Engram observation `sdd/{change-name}/tasks` (memory-based)
+  
+  **Example Tasks**:
+  
+  ```markdown
+  ## Phase 1: Foundation
+  
+  - [ ] 1.1 Create `internal/auth/middleware.go` with JWT validation
+  - [ ] 1.2 Add `AuthConfig` struct to `internal/config/config.go`
+  - [ ] 1.3 Add JWT parsing to `internal/auth/token.go`
+  
+  ## Phase 2: Integration
+  
+  - [ ] 2.1 Wire auth middleware into `internal/server/server.go`
+  - [ ] 2.2 Protect `/api/admin/*` routes with auth middleware
+  ```
+</Step>
+
+<Step title="Phase 6: Apply (sdd-apply)">
+  **Implement tasks following specs and design**
+  
+  Implementation follows either:
+  
+  **Standard workflow**:
+  1. Read specs (acceptance criteria)
+  2. Read design (technical approach)
+  3. Write code matching existing patterns
+  4. Mark tasks complete
+  
+  **TDD workflow** (if enabled):
+  1. RED - Write failing test
+  2. GREEN - Write minimum code to pass
+  3. REFACTOR - Clean up while keeping tests green
+  4. Mark task complete
+  
+  **Outputs**:
+  - Actual code changes
+  - Updated `tasks.md` with `[x]` marks (file-based)
+  - Engram observation `sdd/{change-name}/apply-progress` (memory-based)
+  
+  **TDD Detection**:
+  
+  TDD mode is automatically detected from:
+  - `openspec/config.yaml` → `rules.apply.tdd: true`
+  - Presence of TDD skill in user's skill directory
+  - Existing test patterns in the codebase
+</Step>
+
+<Step title="Phase 7: Verify (sdd-verify)">
+  **Validate implementation matches specs**
+  
+  Verification ensures:
+  - Every spec scenario is covered
+  - Tests pass (if test infrastructure exists)
+  - Implementation matches design decisions
+  - No unintended side effects
+  
+  **Outputs**:
+  - Verification report with pass/fail per scenario
+  - List of gaps or deviations
+  - Test results (if applicable)
+  
+  **Trigger**: After all tasks are complete
+  
+  ```bash
+  /sdd-verify "add-auth-middleware"
+  ```
+</Step>
+
+<Step title="Phase 8: Archive (sdd-archive)">
+  **Sync delta specs to main specs and archive the change**
+  
+  Archiving completes the cycle:
+  1. Merge delta specs into main specs (source of truth)
+  2. Move change folder to archive with date prefix
+  3. Create audit trail with all artifact IDs
+  
+  **File-based mode**:
+  - Updates `openspec/specs/{domain}/spec.md`
+  - Moves to `openspec/changes/archive/YYYY-MM-DD-{change-name}/`
+  
+  **Memory-based mode**:
+  - Creates archive report in Engram
+  - Records all observation IDs for lineage
+  
+  **Trigger**: After verification passes
+  
+  ```bash
+  /sdd-archive "add-auth-middleware"
+  ```
+</Step>
+</Steps>
+
+## Persistence Modes
+
+SDD supports multiple persistence backends:
+
+<Accordion title="File-based (openspec)">
+  **When to use**: You want all artifacts in your repository
+  
+  **Directory structure**:
+  ```
+  openspec/
+  ├── config.yaml              # Project config
+  ├── specs/                   # Source of truth
+  │   └── auth/
+  │       └── spec.md
+  └── changes/                 # Active changes
+      ├── add-auth-middleware/
+      │   ├── proposal.md
+      │   ├── specs/
+      │   ├── design.md
+      │   └── tasks.md
+      └── archive/             # Completed changes
+          └── 2026-03-13-add-auth-middleware/
+  ```
+  
+  **Benefits**:
+  - Version controlled
+  - Team visible
+  - Offline access
+  
+  **Tradeoffs**:
+  - Requires filesystem writes
+  - Manual sync if working across machines
+</Accordion>
+
+<Accordion title="Memory-based (engram)">
+  **When to use**: You want cross-session persistence without files
+  
+  **How it works**:
+  - All artifacts saved to Engram (persistent memory)
+  - Accessed via `mem_search()` and `mem_get_observation()`
+  - Uses `topic_key` for upserts (no duplicates)
+  
+  **Naming convention**:
+  - Project context: `sdd-init/{project-name}`
+  - Exploration: `sdd/{change-name}/explore`
+  - Proposal: `sdd/{change-name}/proposal`
+  - Specs: `sdd/{change-name}/spec`
+  - Design: `sdd/{change-name}/design`
+  - Tasks: `sdd/{change-name}/tasks`
+  - Progress: `sdd/{change-name}/apply-progress`
+  - Verification: `sdd/{change-name}/verify-report`
+  - Archive: `sdd/{change-name}/archive-report`
+  
+  **Benefits**:
+  - No project file clutter
+  - Cross-session memory
+  - Works in ephemeral environments
+  
+  **Tradeoffs**:
+  - Not version controlled
+  - Requires Engram MCP server
+</Accordion>
+
+<Accordion title="Hybrid">
+  **When to use**: You want both file-based AND memory-based persistence
+  
+  **How it works**:
+  - Writes to `openspec/` filesystem
+  - ALSO persists to Engram
+  - Retrieves from Engram (primary) with filesystem fallback
+  
+  **Benefits**:
+  - Version controlled artifacts
+  - Cross-session memory
+  - Best of both worlds
+  
+  **Tradeoffs**:
+  - Requires both Engram and filesystem access
+  - Potential for drift if not synced
+</Accordion>
+
+<Accordion title="None (ephemeral)">
+  **When to use**: Quick prototyping, no persistence needed
+  
+  **How it works**:
+  - All artifacts exist only in conversation
+  - No files written
+  - No Engram persistence
+  
+  **Benefits**:
+  - Zero filesystem impact
+  - Fast (no I/O)
+  
+  **Tradeoffs**:
+  - Lost when conversation ends
+  - No audit trail
+</Accordion>
+
+## SDD Configuration
+
+When using file-based mode, `openspec/config.yaml` configures project-specific rules:
+
+```yaml
+schema: spec-driven
+
+context: |
+  Tech stack: Go 1.24, Bubbletea TUI, SQLite
+  Architecture: Clean architecture with internal packages
+  Testing: Go standard library + teatest
+  Style: gofmt, golangci-lint
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages
+  
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Keep tasks small enough to complete in one session
+  
+  apply:
+    - Follow existing code patterns and conventions
+    - Load relevant coding skills for the project stack
+    tdd: true  # Enable TDD workflow
+    test_command: "go test ./..."
+  
+  verify:
+    - Run tests if test infrastructure exists
+    - Compare implementation against every spec scenario
+  
+  archive:
+    - Warn before merging destructive deltas
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Start with exploration">
+    Always run `sdd-explore` before proposing a change. This ensures you:
+    
+    - Understand the current codebase
+    - Identify affected areas
+    - Compare approaches objectively
+    - Surface risks early
+  </Accordion>
+  
+  <Accordion title="Write testable specs">
+    Every spec scenario should be:
+    
+    - Clear enough to write an automated test
+    - Specific about expected outcomes
+    - Covering both happy paths and edge cases
+    
+    Bad: "The system should handle errors gracefully"
+    
+    Good:
+    ```markdown
+    #### Scenario: Missing required field returns 400
+    
+    - GIVEN a POST request with missing 'email' field
+    - WHEN submitted to /api/users
+    - THEN returns 400 Bad Request
+    - AND response body includes "email is required"
+    ```
+  </Accordion>
+  
+  <Accordion title="Document architecture decisions">
+    Every significant design decision should include:
+    
+    - What you chose
+    - Alternatives you considered
+    - Why you chose this over alternatives
+    
+    This creates an audit trail and helps future maintainers understand the rationale.
+  </Accordion>
+  
+  <Accordion title="Keep tasks small">
+    Each task should be:
+    
+    - Completable in one session (30-60 minutes)
+    - Specific about file paths and changes
+    - Independently testable
+    
+    If a task feels too big, split it into smaller tasks.
+  </Accordion>
+  
+  <Accordion title="Verify before archiving">
+    NEVER archive a change without running `sdd-verify`. Verification ensures:
+    
+    - Every spec scenario is covered
+    - Implementation matches design
+    - No gaps or deviations
+    
+    If verification fails, fix issues before archiving.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Foundation Skills" icon="code" href="/skills/foundation">
+    Learn about Go testing and skill creation
+  </Card>
+  <Card title="Components" icon="puzzle-piece" href="/components">
+    Explore other Gentle AI components
+  </Card>
+</CardGroup>

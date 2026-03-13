@@ -1,0 +1,406 @@
+---
+title: Configuration File Structures
+description: Configuration file formats and paths for each supported AI agent
+---
+
+## Overview
+
+Gentle AI configures each agent by writing to agent-specific configuration files. This page documents the file structures, paths, and injection strategies for all supported agents.
+
+## Claude Code
+
+### Paths
+
+| File | Path (Unix) | Path (Windows) |
+|------|------------|----------------|
+| Config directory | `~/.claude/` | `%USERPROFILE%\.claude\` |
+| System prompt | `~/.claude/CLAUDE.md` | `%USERPROFILE%\.claude\CLAUDE.md` |
+| Skills directory | `~/.claude/skills/` | `%USERPROFILE%\.claude\skills\` |
+| Settings | `~/.claude/settings.json` | `%USERPROFILE%\.claude\settings.json` |
+| MCP configs | `~/.claude/mcp/<server>.json` | `%USERPROFILE%\.claude\mcp\<server>.json` |
+| Output styles | `~/.claude/output-styles/` | `%USERPROFILE%\.claude\output-styles\` |
+
+### System Prompt Strategy
+
+**Marker-based sections** — Uses `<!-- gentle-ai:ID -->` markers to inject sections without clobbering user content.
+
+**Example `CLAUDE.md`**:
+
+```markdown
+<!-- gentle-ai:persona:start -->
+# Persona: Gentleman
+
+You are a teaching-oriented mentor...
+<!-- gentle-ai:persona:end -->
+
+<!-- gentle-ai:sdd:start -->
+# SDD Orchestrator
+
+Agent-teams-lite workflow...
+<!-- gentle-ai:sdd:end -->
+
+<!-- gentle-ai:permissions:start -->
+# Security Permissions
+
+Never read .env files...
+<!-- gentle-ai:permissions:end -->
+```
+
+Content **between** markers is preserved. Markers can be re-injected without data loss.
+
+### MCP Strategy
+
+**Separate files per server** — Each MCP server gets its own JSON file in `~/.claude/mcp/`.
+
+**Example `~/.claude/mcp/engram.json`**:
+
+```json
+{
+  "command": "npx",
+  "args": ["-y", "@upstash/engram"]
+}
+```
+
+**Example `~/.claude/mcp/context7.json`**:
+
+```json
+{
+  "command": "npx",
+  "args": ["-y", "@upstash/context7-mcp"]
+}
+```
+
+### Settings Structure
+
+**Example `~/.claude/settings.json`**:
+
+```json
+{
+  "editor": {
+    "theme": "kanagawa"
+  },
+  "permissions": {
+    "filesystem": {
+      "allowReadPatterns": ["**/*"],
+      "denyReadPatterns": [".env", ".env.*", "*.key", "credentials.json"]
+    }
+  },
+  "outputStyle": "gentleman"
+}
+```
+
+---
+
+## OpenCode
+
+### Paths
+
+| File | Path (Unix) | Path (Windows) |
+|------|------------|----------------|
+| Config directory | `~/.config/opencode/` | `%USERPROFILE%\.config\opencode\` |
+| System prompt | `~/.config/opencode/AGENTS.md` | `%USERPROFILE%\.config\opencode\AGENTS.md` |
+| Skills directory | `~/.config/opencode/skills/` | `%USERPROFILE%\.config\opencode\skills\` |
+| Settings | `~/.config/opencode/opencode.json` | `%USERPROFILE%\.config\opencode\opencode.json` |
+| Slash commands | `~/.config/opencode/commands/` | `%USERPROFILE%\.config\opencode\commands\` |
+
+### System Prompt Strategy
+
+**File replace** — The entire `AGENTS.md` file is replaced with Gentleman AI content.
+
+**Example `AGENTS.md`**:
+
+```markdown
+# Gentleman AI Agent Configuration
+
+## Persona: Gentleman
+
+You are a teaching-oriented mentor...
+
+## SDD Orchestrator
+
+Agent-teams-lite workflow...
+
+## Security Permissions
+
+Never read .env files...
+```
+
+### MCP Strategy
+
+**Merged into settings** — MCP servers are added to the `mcpServers` object in `opencode.json`.
+
+**Example `opencode.json`**:
+
+```json
+{
+  "mcpServers": {
+    "engram": {
+      "command": "npx",
+      "args": ["-y", "@upstash/engram"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  },
+  "theme": "kanagawa",
+  "permissions": {
+    "filesystem": {
+      "denyReadPatterns": [".env", ".env.*", "*.key", "credentials.json"]
+    }
+  }
+}
+```
+
+### Slash Commands
+
+**Example `~/.config/opencode/commands/sdd-init.md`**:
+
+```markdown
+---
+title: sdd-init
+description: Initialize SDD context in a project
+---
+
+Bootstrap SDD folder structure and run discovery...
+```
+
+---
+
+## Gemini CLI
+
+### Paths
+
+| File | Path (Unix) | Path (Windows) |
+|------|------------|----------------|
+| Config directory | `~/.gemini/` | `%USERPROFILE%\.gemini\` |
+| System prompt | `~/.gemini/GEMINI.md` | `%USERPROFILE%\.gemini\GEMINI.md` |
+| Skills directory | `~/.gemini/skills/` | `%USERPROFILE%\.gemini\skills\` |
+| Settings | `~/.gemini/settings.json` | `%USERPROFILE%\.gemini\settings.json` |
+| Custom agents | `~/.gemini/agents/` | `%USERPROFILE%\.gemini\agents\` |
+
+### System Prompt Strategy
+
+**File replace** — The entire `GEMINI.md` file is replaced with Gentleman AI content.
+
+### MCP Strategy
+
+**Merged into settings** — MCP servers are added to the `mcpServers` object in `settings.json`.
+
+**Example `settings.json`**:
+
+```json
+{
+  "mcpServers": {
+    "engram": {
+      "command": "npx",
+      "args": ["-y", "@upstash/engram"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  },
+  "experimental": {
+    "enableAgents": true
+  }
+}
+```
+
+### Custom Agents (Experimental)
+
+Gemini CLI supports custom sub-agents defined as markdown files in `~/.gemini/agents/`.
+
+**Example `~/.gemini/agents/sdd-explorer.md`**:
+
+```markdown
+---
+name: sdd-explorer
+description: Explores codebase before making changes
+---
+
+You are an SDD explorer agent...
+```
+
+---
+
+## Cursor
+
+### Paths
+
+| File | Path (Unix) | Path (Windows) |
+|------|------------|----------------|
+| Config directory | `~/.cursor/` | `%USERPROFILE%\.cursor\` |
+| System prompt | `~/.cursor/rules/gentle-ai.mdc` | `%USERPROFILE%\.cursor\rules\gentle-ai.mdc` |
+| Skills directory | `~/.cursor/skills/` | `%USERPROFILE%\.cursor\skills\` |
+| Settings | `~/.cursor/settings.json` | `%USERPROFILE%\.cursor\settings.json` |
+| MCP config | `~/.cursor/mcp.json` | `%USERPROFILE%\.cursor\mcp.json` |
+
+### System Prompt Strategy
+
+**File replace** — The entire `gentle-ai.mdc` file is replaced with Gentleman AI content.
+
+**Example `~/.cursor/rules/gentle-ai.mdc`**:
+
+```markdown
+# Gentleman AI Configuration
+
+## Persona: Gentleman
+
+You are a teaching-oriented mentor...
+
+## SDD Orchestrator
+
+Agent-teams-lite workflow...
+```
+
+### MCP Strategy
+
+**Dedicated `mcp.json` file** — All MCP servers are defined in a single `~/.cursor/mcp.json` file.
+
+**Example `~/.cursor/mcp.json`**:
+
+```json
+{
+  "mcpServers": {
+    "engram": {
+      "command": "npx",
+      "args": ["-y", "@upstash/engram"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  }
+}
+```
+
+### Async Sub-Agents (v2.5+)
+
+Cursor supports async sub-agents that can run in the background and spawn nested sub-agent trees. This is enabled automatically when the SDD orchestrator is injected into the system prompt.
+
+---
+
+## VS Code Copilot
+
+### Paths
+
+| File | Path (macOS) | Path (Linux) | Path (Windows) |
+|------|-------------|--------------|----------------|
+| System prompt | `~/Library/Application Support/Code/User/prompts/gentle-ai.instructions.md` | `~/.config/Code/User/prompts/gentle-ai.instructions.md` | `%APPDATA%\Code\User\prompts\gentle-ai.instructions.md` |
+| Settings | `~/Library/Application Support/Code/User/settings.json` | `~/.config/Code/User/settings.json` | `%APPDATA%\Code\User\settings.json` |
+| MCP config | `~/Library/Application Support/Code/User/mcp.json` | `~/.config/Code/User/mcp.json` | `%APPDATA%\Code\User\mcp.json` |
+| Skills (global) | `~/.copilot/skills/` | `~/.copilot/skills/` | `%USERPROFILE%\.copilot\skills\` |
+
+### System Prompt Strategy
+
+**Instructions file** — VS Code Copilot reads `.instructions.md` files from the `prompts/` folder.
+
+**Example `gentle-ai.instructions.md`**:
+
+```markdown
+# Gentleman AI Instructions
+
+## Persona: Gentleman
+
+You are a teaching-oriented mentor...
+
+## SDD Orchestrator
+
+Agent-teams-lite workflow...
+```
+
+### MCP Strategy
+
+**Dedicated `mcp.json` file** — All MCP servers are defined in `Code/User/mcp.json`.
+
+**Example `mcp.json`**:
+
+```json
+{
+  "mcpServers": {
+    "engram": {
+      "command": "npx",
+      "args": ["-y", "@upstash/engram"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  }
+}
+```
+
+### Skills Loading
+
+VS Code Copilot loads skills from multiple locations:
+- `~/.copilot/skills/` (global, installed by Gentle AI)
+- `.github/skills/` (workspace-specific)
+- `~/.claude/skills/` (shared with Claude Code)
+- `.claude/skills/` (workspace-specific, shared with Claude Code)
+
+---
+
+## Skill File Structure
+
+All agents use the same skill file format. Skills are markdown files with YAML frontmatter.
+
+**Example `~/.claude/skills/go-testing/SKILL.md`**:
+
+```markdown
+---
+name: go-testing
+description: Go testing patterns including Bubbletea TUI testing
+version: 1.0.0
+---
+
+# Go Testing Skill
+
+## Table-Driven Tests
+
+Use table-driven tests for parameterized scenarios...
+
+## Bubbletea TUI Testing
+
+Test Bubbletea models by sending messages...
+```
+
+---
+
+## Backup Manifest Structure
+
+Gentle AI creates a backup manifest before modifying any files.
+
+**Example `~/.gentle-ai/backups/20240313120000.000000000/manifest.json`**:
+
+```json
+{
+  "id": "20240313120000.000000000",
+  "createdAt": "2024-03-13T12:00:00Z",
+  "entries": [
+    {
+      "originalPath": "/Users/dev/.claude/CLAUDE.md",
+      "backupPath": "/Users/dev/.gentle-ai/backups/20240313120000.000000000/.claude/CLAUDE.md",
+      "existed": true
+    },
+    {
+      "originalPath": "/Users/dev/.claude/settings.json",
+      "backupPath": "/Users/dev/.gentle-ai/backups/20240313120000.000000000/.claude/settings.json",
+      "existed": true
+    }
+  ]
+}
+```
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="gentle-ai install" icon="download" href="/api/install">
+    Install and configure agents
+  </Card>
+  <Card title="Agent Adapters" icon="plug" href="/api/agent-adapters">
+    Agent adapter interface and implementation
+  </Card>
+</CardGroup>

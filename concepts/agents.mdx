@@ -1,0 +1,375 @@
+---
+title: Supported AI Agents
+description: All AI coding agents supported by Gentle AI with their ecosystem capabilities
+---
+
+## Overview
+
+Gentle AI supports **5 AI coding agents** across terminal-based and IDE-based platforms. Every agent receives the **full ecosystem stack**: SDD orchestrator, skill files, MCP servers, system prompt injection, and sub-agent delegation.
+
+<Note>
+**All agents are Tier Full**: Every supported agent gets the complete Gentleman AI ecosystem. The days of partial support are over.
+</Note>
+
+## Supported Agents
+
+<CardGroup cols={2}>
+  <Card title="Claude Code" icon="terminal" color="#7FB4CA">
+    **Terminal-based** — Anthropic's official CLI
+    
+    Config: `~/.claude`
+  </Card>
+  
+  <Card title="OpenCode" icon="terminal" color="#B7CC85">
+    **Terminal-based** — Open source CLI
+    
+    Config: `~/.config/opencode`
+  </Card>
+  
+  <Card title="Gemini CLI" icon="terminal" color="#E0C15A">
+    **Terminal-based** — Google's CLI
+    
+    Config: `~/.gemini`
+  </Card>
+  
+  <Card title="Cursor" icon="code" color="#957FB8">
+    **IDE-based** — AI-first code editor
+    
+    Config: `~/.cursor`
+  </Card>
+  
+  <Card title="VS Code Copilot" icon="code" color="#CB7C94">
+    **IDE-based** — GitHub Copilot + extensions
+    
+    Config: `~/.copilot` + VS Code User profile
+  </Card>
+</CardGroup>
+
+## Agent Comparison
+
+### Terminal-Based Agents
+
+| Feature | Claude Code | OpenCode | Gemini CLI |
+|---------|-------------|----------|------------|
+| **Skills** | Yes | Yes | Yes |
+| **MCP** | Yes | Yes | Yes |
+| **Sub-agents** | Yes | Yes | Yes (experimental) |
+| **Output Styles** | Yes | No | No |
+| **Slash Commands** | No | Yes | No |
+| **Engram Integration** | Plugin + MCP | Plugin + MCP | MCP |
+| **System Prompt Strategy** | Markdown sections | File replace | Append to file |
+| **MCP Strategy** | Separate files | Merge into settings | Merge into settings |
+
+### IDE-Based Agents
+
+| Feature | Cursor | VS Code Copilot |
+|---------|--------|----------------|
+| **Skills** | Yes | Yes |
+| **MCP** | Yes | Yes |
+| **Sub-agents** | Yes (async) | Yes (runSubagent) |
+| **Workspace Rules** | .cursorrules | workspace settings |
+| **Engram Integration** | MCP | MCP |
+| **System Prompt Strategy** | File replace | Append to file |
+| **MCP Strategy** | Config file | Config file |
+
+## Agent Details
+
+### Claude Code
+
+<Accordion title="Features & Configuration">
+  **By Anthropic** — Terminal-based AI coding agent powered by Claude.
+  
+  **Config Location**: `~/.claude/`
+  
+  **What Gets Configured**:
+  - `CLAUDE.md` — Persona + SDD orchestrator using markdown section markers
+  - `settings.json` — Permissions, theme, statusline, thinking verbs, vim mode
+  - `skills/` — All SDD and foundation skills
+  - `plugins/` — Engram plugin installed via `claude plugin marketplace add`
+  - `~/.claude.json` — MCP servers (Context7, etc.)
+  
+  **Unique Features**:
+  - **Output Styles** — Custom output formatting (exclusive to Claude Code)
+  - **Plugin Marketplace** — Rich plugin ecosystem
+  - **Thinking Verbs** — Customizable status messages during processing
+  
+  **Sub-agent Support**: Native sub-agent delegation in system prompt
+  
+  **Platform Support**: macOS, Linux, Windows
+  
+  ```bash
+  # Example installation
+  npm install -g @anthropic-ai/claude-code
+  gentle-ai install --agent claude-code --preset full-gentleman
+  ```
+</Accordion>
+
+### OpenCode
+
+<Accordion title="Features & Configuration">
+  **Open source** — Community-driven terminal AI agent.
+  
+  **Config Location**: `~/.config/opencode/`
+  
+  **What Gets Configured**:
+  - `AGENTS.md` — Full SDD orchestrator and persona (file replace strategy)
+  - `opencode.json` — Agents, MCP servers, Engram plugin, theme
+  - `skill/` — All SDD and foundation skills
+  - `commands/` — SDD slash commands (`/sdd-init`, `/sdd-new`, etc.)
+  - `plugins/engram.ts` — TypeScript Engram plugin
+  
+  **Unique Features**:
+  - **Slash Commands** — Rich command palette for workflows
+  - **TypeScript Plugins** — Extensible plugin system
+  - **Open Source** — Community contributions welcome
+  
+  **Sub-agent Support**: Native sub-agent delegation with parallel execution
+  
+  **Platform Support**: macOS, Linux, Windows
+  
+  ```bash
+  # Example installation
+  brew install opencode  # or download binary
+  gentle-ai install --agent opencode --preset full-gentleman
+  ```
+</Accordion>
+
+### Gemini CLI
+
+<Accordion title="Features & Configuration">
+  **By Google** — Terminal-based agent powered by Gemini models.
+  
+  **Config Location**: `~/.gemini/`
+  
+  **What Gets Configured**:
+  - `settings.json` — MCP servers including Engram, experimental agent support
+  - `system.md` — Memory protocol + persona appended to system instructions
+  - `.env` — `GEMINI_SYSTEM_MD=1` to enable system.md loading
+  - Custom sub-agents defined as markdown files in `~/.gemini/agents/`
+  
+  **Unique Features**:
+  - **Gemini Models** — Access to Google's latest models
+  - **Experimental Agents** — Sub-agents require `experimental.enableAgents: true`
+  
+  **Sub-agent Support**: Experimental—requires feature flag in settings.json
+  
+  **Platform Support**: macOS, Linux, Windows
+  
+  ```bash
+  # Example installation
+  npm install -g @google/gemini-cli
+  gentle-ai install --agent gemini-cli --preset full-gentleman
+  ```
+</Accordion>
+
+### Cursor
+
+<Accordion title="Features & Configuration">
+  **AI-first editor** — Fork of VS Code with native AI integration.
+  
+  **Config Location**: `~/.cursor/`
+  
+  **What Gets Configured**:
+  - `.cursorrules` — Persona + condensed SDD orchestrator (inline mode)
+  - `skills/` — Coding skills installed
+  - `mcp.json` — MCP server configurations
+  
+  **Unique Features**:
+  - **Async Sub-agents** — v2.5+ supports background sub-agents with nested trees
+  - **AI-First UX** — Built from ground up for AI-assisted development
+  - **Multi-file Editing** — Cursor can edit multiple files simultaneously
+  
+  **Sub-agent Support**: Async sub-agents with background execution (v2.5+)
+  
+  **Platform Support**: macOS, Linux, Windows
+  
+  ```bash
+  # Cursor is typically installed as desktop app
+  gentle-ai install --agent cursor --preset full-gentleman
+  ```
+</Accordion>
+
+### VS Code Copilot
+
+<Accordion title="Features & Configuration">
+  **Microsoft VS Code** with GitHub Copilot and compatible extensions.
+  
+  **Config Locations**:
+  - `~/.copilot/skills/` — Global skill directory
+  - `Code/User/prompts/gentle-ai.instructions.md` — System prompt
+  - `Code/User/mcp.json` — MCP server configuration
+  
+  **What Gets Configured**:
+  - System prompt with persona + SDD orchestrator
+  - Skills directory with all curated skills
+  - MCP configuration for Context7 and other servers
+  - Engram MCP integration
+  
+  **Unique Features**:
+  - **GitHub Copilot** — Industry-leading code completion
+  - **Extension Ecosystem** — Largest extension marketplace
+  - **Cross-platform** — Consistent experience across platforms
+  
+  **Sub-agent Support**: `runSubagent` tool with parallel execution
+  
+  **Platform Support**: macOS, Linux, Windows
+  
+  ```bash
+  # VS Code is typically already installed
+  gentle-ai install --agent vscode-copilot --preset full-gentleman
+  ```
+</Accordion>
+
+## Configuration Strategies
+
+Each agent has unique configuration needs. Gentle AI handles these differences automatically:
+
+### System Prompt Strategies
+
+<Tabs>
+  <Tab title="Markdown Sections">
+    **Used by**: Claude Code
+    
+    Injects content using HTML comment markers without clobbering user content:
+    
+    ```markdown
+    <!-- gentle-ai:persona:start -->
+    Your Gentleman persona content here
+    <!-- gentle-ai:persona:end -->
+    
+    <!-- gentle-ai:sdd:start -->
+    SDD orchestrator content here
+    <!-- gentle-ai:sdd:end -->
+    ```
+    
+    **Benefit**: Preserves user customizations outside marked sections
+  </Tab>
+  
+  <Tab title="File Replace">
+    **Used by**: OpenCode, Cursor
+    
+    Replaces the entire system prompt file with generated content.
+    
+    **Benefit**: Clean, predictable state—no merge conflicts
+    
+    **Note**: Existing file is backed up before replacement
+  </Tab>
+  
+  <Tab title="Append to File">
+    **Used by**: Gemini CLI, VS Code Copilot
+    
+    Appends ecosystem content to existing system instructions.
+    
+    **Benefit**: Extends agent's default behavior without replacement
+  </Tab>
+</Tabs>
+
+### MCP Configuration Strategies
+
+<Tabs>
+  <Tab title="Separate Files">
+    **Used by**: Claude Code
+    
+    One JSON file per MCP server in a dedicated directory:
+    
+    ```
+    ~/.claude/mcp/
+      context7.json
+      engram.json
+      notion.json
+    ```
+    
+    **Benefit**: Easy to add/remove individual servers
+  </Tab>
+  
+  <Tab title="Merge into Settings">
+    **Used by**: OpenCode, Gemini CLI
+    
+    MCP servers defined in the main settings file:
+    
+    ```json
+    {
+      "mcpServers": {
+        "context7": { ... },
+        "engram": { ... }
+      }
+    }
+    ```
+    
+    **Benefit**: Single configuration file
+  </Tab>
+  
+  <Tab title="Config File">
+    **Used by**: Cursor, VS Code Copilot
+    
+    Dedicated `mcp.json` configuration file:
+    
+    ```json
+    {
+      "mcpServers": { ... }
+    }
+    ```
+    
+    **Benefit**: MCP config separate from other settings
+  </Tab>
+</Tabs>
+
+## Platform-Specific Config Paths
+
+### macOS / Linux
+
+| Agent | Config Path |
+|-------|-------------|
+| Claude Code | `~/.claude/` |
+| OpenCode | `~/.config/opencode/` |
+| Gemini CLI | `~/.gemini/` |
+| Cursor | `~/.cursor/` |
+| VS Code Copilot | `~/.copilot/` + `~/.config/Code/User/` |
+
+### Windows
+
+| Agent | Config Path |
+|-------|-------------|
+| Claude Code | `%USERPROFILE%\.claude\` |
+| OpenCode | `%USERPROFILE%\.config\opencode\` |
+| Gemini CLI | `%USERPROFILE%\.gemini\` |
+| Cursor | `%USERPROFILE%\.cursor\` |
+| VS Code Copilot | `%USERPROFILE%\.copilot\` + `%APPDATA%\Code\User\` |
+
+## Multi-Agent Workflows
+
+You can configure multiple agents simultaneously and switch between them seamlessly:
+
+```bash
+gentle-ai install \
+  --agent claude-code,opencode,cursor \
+  --preset full-gentleman
+```
+
+**What happens**:
+1. All three agents get configured with identical ecosystem components
+2. They all connect to the same Engram instance (shared memory)
+3. Skills are copied to each agent's directory
+4. GGA is configured to work with all three
+
+**Result**: Start a feature in Claude Code, continue it in Cursor, finish in OpenCode—full context preserved.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Install Gentle AI" icon="download" href="/quickstart">
+    Configure your agents with one command
+  </Card>
+  
+  <Card title="Components" icon="puzzle-piece" href="/concepts/components">
+    Learn about the 8 ecosystem components
+  </Card>
+  
+  <Card title="Presets" icon="sliders" href="/concepts/presets">
+    Choose your configuration level
+  </Card>
+  
+  <Card title="Skills" icon="book" href="/concepts/skills">
+    Explore the curated skill library
+  </Card>
+</CardGroup>

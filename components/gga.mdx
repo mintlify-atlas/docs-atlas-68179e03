@@ -1,0 +1,376 @@
+---
+title: "GGA"
+description: "Gentleman Guardian Angel - AI provider switcher with guardrails"
+icon: "shield-halved"
+---
+
+GGA (Gentleman Guardian Angel) is a git hook-based AI provider switcher that automatically adjusts AI model capabilities based on branch and PR context. It prevents powerful models from making unchecked changes to critical branches.
+
+## What it does
+
+GGA provides:
+- **Branch-aware model switching**: Different AI models for feature branches vs main/production
+- **PR mode guardrails**: Switches to review-optimized models during PR creation
+- **Git hook integration**: Automatic provider switching based on git context
+- **Per-repository configuration**: Enable GGA per project, not globally enforced
+
+<Warning>
+GGA is **not automatically enabled** per repository. After global installation, you must explicitly enable it in each project with `gga init` and `gga install`.
+</Warning>
+
+## Installation
+
+GGA installs:
+1. **Global binary**: `gga` command available system-wide
+2. **No automatic project setup**: You must run `gga init` per repository
+
+### What gets configured
+
+**Global Installation**
+- Binary: `gga` added to system PATH
+- Platform-specific install:
+  - macOS: `brew install gga`
+  - Linux: `go install` or package manager
+  - Windows: `go install` or binary download
+
+**Per-Project Setup** (manual):
+- `.gga/config.yaml` - Branch-to-provider mappings
+- `.git/hooks/pre-commit` - GGA hook injection
+- `.git/hooks/pre-push` - GGA hook injection
+
+## How it works
+
+### Branch-aware switching
+
+GGA switches AI providers based on current branch:
+
+```yaml
+# .gga/config.yaml
+rules:
+  - branch: "main"
+    provider: "claude-code"
+    model: "claude-3.5-sonnet"  # Conservative, review-focused
+    
+  - branch: "develop"
+    provider: "opencode"
+    model: "gpt-4-turbo"  # Fast iteration
+    
+  - branch: "feature/**"
+    provider: "cursor"
+    model: "claude-opus"  # Max capability for feature work
+```
+
+### PR mode
+
+When creating a PR, GGA automatically:
+1. Detects PR context (`gh pr create`, `git push` with PR flag)
+2. Switches to review-optimized model
+3. Enables guardrails (no destructive operations)
+4. Reverts after PR creation completes
+
+```bash
+# .gga/pr_mode.sh (embedded)
+# Triggered on: gh pr create, git push --set-upstream
+# Action: Switch to claude-3.5-sonnet (review mode)
+```
+
+## Project setup
+
+<Steps>
+<Step title="Install GGA globally">
+Gentle AI installs the GGA binary system-wide:
+
+```bash
+# Via Gentle AI
+gentle-ai install --component gga
+
+# Or manually
+brew install gga  # macOS
+go install github.com/gentleman-programming/gga@latest  # Any platform
+```
+</Step>
+
+<Step title="Enable GGA per repository">
+In each project where you want GGA:
+
+```bash
+cd ~/my-project
+gga init
+```
+
+This creates `.gga/config.yaml` with default rules.
+</Step>
+
+<Step title="Install git hooks">
+Inject GGA into git hooks:
+
+```bash
+gga install
+```
+
+This adds GGA hook calls to `.git/hooks/pre-commit` and `.git/hooks/pre-push`.
+</Step>
+
+<Step title="Configure branch rules">
+Edit `.gga/config.yaml` for your workflow:
+
+```yaml
+rules:
+  - branch: "main"
+    provider: "claude-code"
+    model: "claude-3.5-sonnet"
+    
+  - branch: "staging"
+    provider: "claude-code"
+    model: "claude-3.5-sonnet"
+    
+  - branch: "feature/**"
+    provider: "cursor"
+    model: "claude-opus"
+```
+</Step>
+</Steps>
+
+## Configuration reference
+
+### Config file structure
+
+```yaml
+# .gga/config.yaml
+rules:
+  - branch: "<pattern>"
+    provider: "<agent-id>"
+    model: "<model-name>"
+    options:
+      max_tokens: 4096
+      temperature: 0.7
+```
+
+### Branch patterns
+
+| Pattern | Matches |
+|---------|----------|
+| `main` | Exact match: `main` branch |
+| `develop` | Exact match: `develop` branch |
+| `feature/**` | Glob: `feature/auth`, `feature/ui/button` |
+| `hotfix/*` | Glob: `hotfix/bug-123` |
+| `release/**` | Glob: `release/v1.0`, `release/2024-01` |
+
+### Supported providers
+
+| Provider ID | Description |
+|-------------|-------------|
+| `claude-code` | Anthropic Claude via Claude Code |
+| `opencode` | Multi-provider via OpenCode |
+| `cursor` | Cursor IDE |
+| `gemini-cli` | Google Gemini CLI |
+| `vscode-copilot` | GitHub Copilot in VS Code |
+
+### Supported models
+
+<AccordionGroup>
+<Accordion title="Anthropic" icon="robot">
+- `claude-opus-4` - Most capable, highest cost
+- `claude-3.5-sonnet` - Balanced, excellent for code review
+- `claude-3-haiku` - Fast, low cost
+</Accordion>
+
+<Accordion title="OpenAI" icon="robot">
+- `gpt-4-turbo` - Fast iteration, good reasoning
+- `gpt-4o` - Multimodal, vision support
+- `gpt-3.5-turbo` - Fast, low cost
+</Accordion>
+
+<Accordion title="Google" icon="robot">
+- `gemini-2.0-flash-thinking-exp` - Experimental, deep reasoning
+- `gemini-1.5-pro` - Long context, analysis
+- `gemini-1.5-flash` - Fast, low cost
+</Accordion>
+</AccordionGroup>
+
+## Example workflows
+
+### Conservative main branch
+
+```yaml
+rules:
+  - branch: "main"
+    provider: "claude-code"
+    model: "claude-3.5-sonnet"
+    options:
+      # Conservative settings for main
+      temperature: 0.3
+      max_tokens: 2048
+```
+
+**Result**: When on `main`, all AI operations use Claude 3.5 Sonnet with conservative settings. Ideal for reviews and hotfixes.
+
+### Fast feature iteration
+
+```yaml
+rules:
+  - branch: "feature/**"
+    provider: "cursor"
+    model: "claude-opus"
+    options:
+      # Max capability for feature work
+      temperature: 0.7
+      max_tokens: 8192
+```
+
+**Result**: Feature branches use Claude Opus for maximum capability. Fast, creative, willing to explore options.
+
+### Staging review mode
+
+```yaml
+rules:
+  - branch: "staging"
+    provider: "claude-code"
+    model: "claude-3.5-sonnet"
+    options:
+      # Review mode - catch issues before prod
+      temperature: 0.2
+      focus: "testing"
+```
+
+**Result**: Staging branch uses review-focused settings. Prioritizes finding bugs over generating new code.
+
+## PR mode behavior
+
+When you create a PR:
+
+```bash
+gh pr create --title "Add auth" --body "Implements JWT auth"
+```
+
+GGA automatically:
+1. Detects PR creation via git hook
+2. Runs `.gga/pr_mode.sh` script
+3. Switches to review model (e.g., `claude-3.5-sonnet`)
+4. Agent now optimized for:
+   - Finding bugs and edge cases
+   - Suggesting test coverage
+   - Reviewing code quality
+   - Checking documentation
+
+### PR mode assets
+
+GGA includes embedded assets:
+- `pr_mode.sh` - Script triggered on PR creation
+- `AGENTS.md` - Code review rules and rejection criteria
+
+**Code review rules** (from AGENTS.md):
+
+```markdown
+## General
+REJECT if:
+- Hardcoded secrets or credentials
+- `any` type (TypeScript) or missing type hints (Python)
+- Empty catch blocks (silent error handling)
+- Code duplication (violates DRY)
+
+## Response Format
+FIRST LINE must be exactly:
+STATUS: PASSED
+or
+STATUS: FAILED
+
+If FAILED, list: `file:line - rule violated - issue`
+```
+
+## Disabling GGA per repository
+
+To remove GGA from a project:
+
+```bash
+# Remove git hooks
+gga uninstall
+
+# Remove config
+rm -rf .gga/
+```
+
+Global `gga` binary remains available for other projects.
+
+## Best practices
+
+<CardGroup cols={2}>
+<Card title="Conservative production" icon="shield">
+Use review-focused models on main/production branches.
+
+**Why**: Catch issues before they reach users.
+
+**Model**: `claude-3.5-sonnet` with low temperature.
+</Card>
+
+<Card title="Powerful feature work" icon="rocket">
+Use max-capability models on feature branches.
+
+**Why**: Explore solutions, iterate fast, try creative approaches.
+
+**Model**: `claude-opus` or `gpt-4-turbo`.
+</Card>
+
+<Card title="Staged rollout" icon="stairs">
+Use intermediate model on staging/develop.
+
+**Why**: Balance cost and capability for pre-production testing.
+
+**Model**: `gpt-4-turbo` or `gemini-1.5-pro`.
+</Card>
+
+<Card title="Per-repo opt-in" icon="toggle-on">
+Only enable GGA in repositories that need it.
+
+**Why**: Not all projects need branch-aware AI switching.
+
+**Action**: Run `gga init` only where valuable.
+</Card>
+</CardGroup>
+
+## Troubleshooting
+
+### GGA not switching models
+
+Check:
+
+```bash
+# Verify GGA hooks installed
+cat .git/hooks/pre-commit | grep gga
+cat .git/hooks/pre-push | grep gga
+
+# Test config
+gga validate
+
+# Check current provider
+gga status
+```
+
+### Hooks not triggering
+
+Ensure hooks are executable:
+
+```bash
+chmod +x .git/hooks/pre-commit
+chmod +x .git/hooks/pre-push
+```
+
+### Config not found
+
+GGA requires `.gga/config.yaml` in repository root:
+
+```bash
+# Recreate config
+gga init
+```
+
+## Related components
+
+<CardGroup cols={2}>
+<Card title="Permissions" icon="shield" href="/components/permissions">
+  Security-first defaults and guardrails
+</Card>
+<Card title="Persona" icon="user-tie" href="/components/persona">
+  Behavior mode configuration
+</Card>
+</CardGroup>

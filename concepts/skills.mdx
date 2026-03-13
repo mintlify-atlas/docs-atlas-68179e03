@@ -1,0 +1,638 @@
+---
+title: Curated Coding Skills
+description: The skill library that teaches AI agents modern development patterns and best practices
+---
+
+## Overview
+
+The Gentle AI skill library encodes **curated coding patterns and best practices** as markdown files that AI agents automatically load based on file context. Currently includes **11 production skills** with more planned.
+
+<Note>
+**What is a Skill?** A skill is a structured markdown document that teaches an AI agent how to approach a specific task or technology. Skills follow the Agent Skills specification and are automatically loaded when working with relevant files.
+</Note>
+
+## Skill Categories
+
+<Tabs>
+  <Tab title="SDD Workflow">
+    **9 skills** that orchestrate the Spec-Driven Development workflow.
+    
+    These skills work together to ensure the agent plans before coding, explores before implementing, and validates before committing.
+    
+    All SDD skills are **P0 priority** and included in both `full-gentleman` and `ecosystem-only` presets.
+  </Tab>
+  
+  <Tab title="Foundation">
+    **2 skills** that provide core development capabilities.
+    
+    - Go testing patterns (including Bubbletea TUI testing)
+    - Skill creation following Agent Skills spec
+    
+    Foundation skills are **P0 priority** and included by default.
+  </Tab>
+  
+  <Tab title="Frontend (Planned)">
+    Future skills for modern frontend development:
+    - React 19 patterns
+    - Next.js 15 App Router
+    - Tailwind CSS 4 utilities
+    - Zustand 5 state management
+  </Tab>
+  
+  <Tab title="Backend (Planned)">
+    Future skills for backend development:
+    - Django REST Framework
+    - API design patterns
+    - Database optimization
+  </Tab>
+</Tabs>
+
+## SDD Skills (9 Skills)
+
+The Spec-Driven Development skill set ensures the agent follows a structured workflow:
+
+### sdd-init — Bootstrap SDD Context
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Initialize SDD workflow in a project.
+  
+  **What it does**:
+  - Creates `.sdd/` directory structure
+  - Generates `context.md` with project overview
+  - Sets up delta and archive directories
+  - Configures git to ignore sensitive SDD files
+  
+  **When to use**: First time using SDD in a project, or when resetting context.
+  
+  **Output**:
+  ```
+  .sdd/
+    context.md       # Project overview, conventions, decisions
+    delta/           # Active work-in-progress specs
+    archive/         # Completed changes with timestamps
+  ```
+  
+  **Example prompt**:
+  ```
+  "Initialize SDD in this project"
+  ```
+  
+  **Agent behavior**:
+  - Scans codebase to understand architecture
+  - Identifies primary languages and frameworks
+  - Documents existing patterns and conventions
+  - Creates comprehensive context.md
+</Accordion>
+
+### sdd-explore — Investigate Codebase
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Investigate codebase before committing to a change.
+  
+  **What it does**:
+  - Scans relevant files and directories
+  - Identifies existing patterns and conventions
+  - Maps dependencies and relationships
+  - Documents findings in exploration notes
+  
+  **When to use**: Before starting any new feature or refactoring.
+  
+  **Output**: `.sdd/delta/exploration-notes.md`
+  
+  **Example prompt**:
+  ```
+  "Explore how authentication is currently implemented"
+  ```
+  
+  **Agent behavior**:
+  - Uses file search and grep to find relevant code
+  - Traces data flow and control flow
+  - Identifies related test files
+  - Documents current state without making changes
+</Accordion>
+
+### sdd-propose — Create Change Proposal
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Create a change proposal with intent, scope, and approach.
+  
+  **What it does**:
+  - Documents what needs to change and why
+  - Defines scope boundaries (what's in, what's out)
+  - Proposes implementation approach
+  - Identifies risks and trade-offs
+  
+  **When to use**: After exploration, before writing specs.
+  
+  **Output**: `.sdd/delta/proposal.md`
+  
+  **Example prompt**:
+  ```
+  "Propose adding real-time notifications to the dashboard"
+  ```
+  
+  **Agent behavior**:
+  - References exploration findings
+  - Considers multiple approaches
+  - Documents pros/cons of each approach
+  - Recommends preferred approach with justification
+</Accordion>
+
+### sdd-spec — Write Specifications
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Write detailed specifications with requirements and scenarios.
+  
+  **What it does**:
+  - Documents functional requirements
+  - Defines acceptance criteria
+  - Lists test scenarios (happy path + edge cases)
+  - Specifies API contracts or interfaces
+  
+  **When to use**: After proposal approval, before design.
+  
+  **Output**: `.sdd/delta/spec.md`
+  
+  **Example prompt**:
+  ```
+  "Write specs for JWT-based authentication"
+  ```
+  
+  **Agent behavior**:
+  - Translates proposal into concrete requirements
+  - Breaks down into user stories or use cases
+  - Defines success criteria
+  - Includes security and performance requirements
+</Accordion>
+
+### sdd-design — Technical Design
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Create technical design with architecture decisions.
+  
+  **What it does**:
+  - Documents technical approach
+  - Specifies components and their interactions
+  - Defines data models and schemas
+  - Makes architecture decisions (ADRs)
+  
+  **When to use**: After specs, before breaking down tasks.
+  
+  **Output**: `.sdd/delta/design.md`
+  
+  **Example prompt**:
+  ```
+  "Design the notification system architecture"
+  ```
+  
+  **Agent behavior**:
+  - Creates component diagrams (mermaid)
+  - Specifies interfaces and contracts
+  - Documents technology choices
+  - Identifies reusable patterns from codebase
+</Accordion>
+
+### sdd-tasks — Break Down Tasks
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Break down design into implementation tasks.
+  
+  **What it does**:
+  - Lists sequential or parallel tasks
+  - Estimates complexity (S/M/L/XL)
+  - Identifies dependencies between tasks
+  - Assigns priority
+  
+  **When to use**: After design, before implementation.
+  
+  **Output**: `.sdd/delta/tasks.md`
+  
+  **Example prompt**:
+  ```
+  "Break down the auth implementation into tasks"
+  ```
+  
+  **Agent behavior**:
+  - Creates actionable, atomic tasks
+  - Orders tasks based on dependencies
+  - Includes testing tasks alongside implementation
+  - Estimates effort for each task
+</Accordion>
+
+### sdd-apply — Implement Code
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Implement code following specs and design.
+  
+  **What it does**:
+  - Implements tasks sequentially
+  - Follows design specifications exactly
+  - Writes tests alongside implementation
+  - Updates documentation as needed
+  
+  **When to use**: After tasks are defined, during implementation phase.
+  
+  **Output**: Actual code changes + updated task list
+  
+  **Example prompt**:
+  ```
+  "Implement the JWT middleware from the design"
+  ```
+  
+  **Agent behavior**:
+  - References spec and design documents continuously
+  - Implements one task at a time
+  - Marks tasks as completed
+  - Runs tests to verify each task
+</Accordion>
+
+### sdd-verify — Validate Implementation
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Validate implementation matches specs.
+  
+  **What it does**:
+  - Runs all tests
+  - Verifies acceptance criteria from spec
+  - Checks edge cases and error handling
+  - Confirms non-functional requirements (performance, security)
+  
+  **When to use**: After implementation, before archiving.
+  
+  **Output**: `.sdd/delta/verification-report.md`
+  
+  **Example prompt**:
+  ```
+  "Verify the auth implementation matches the spec"
+  ```
+  
+  **Agent behavior**:
+  - Cross-references implementation with spec
+  - Runs test suite and reports results
+  - Identifies any deviations from design
+  - Suggests fixes for failing tests
+</Accordion>
+
+### sdd-archive — Archive Completed Changes
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Sync delta specs to main specs and archive.
+  
+  **What it does**:
+  - Merges delta specifications into `context.md`
+  - Moves delta files to archive with timestamp
+  - Updates project context with new decisions
+  - Cleans up delta directory for next change
+  
+  **When to use**: After verification passes and change is complete.
+  
+  **Output**:
+  ```
+  .sdd/context.md (updated)
+  .sdd/archive/20260313-143022/
+    proposal.md
+    spec.md
+    design.md
+    tasks.md
+    verification-report.md
+  ```
+  
+  **Example prompt**:
+  ```
+  "Archive the completed auth feature"
+  ```
+  
+  **Agent behavior**:
+  - Extracts key decisions from delta specs
+  - Updates context.md with new patterns
+  - Creates timestamped archive directory
+  - Preserves full history of the change
+</Accordion>
+
+## Foundation Skills (2 Skills)
+
+### go-testing — Go Testing Patterns
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Teach comprehensive Go testing patterns including Bubbletea TUI testing.
+  
+  **What it covers**:
+  - Table-driven tests
+  - Subtests with `t.Run()`
+  - Test fixtures and golden files
+  - Mocking and dependency injection
+  - Bubbletea TUI testing with teatest
+  - Integration tests
+  - Benchmark tests
+  
+  **When to use**: When writing or refactoring Go tests.
+  
+  **Example patterns**:
+  
+  ```go
+  // Table-driven test
+  func TestCalculate(t *testing.T) {
+      tests := []struct {
+          name string
+          input int
+          want int
+      }{
+          {"positive", 5, 10},
+          {"negative", -5, 0},
+      }
+      
+      for _, tt := range tests {
+          t.Run(tt.name, func(t *testing.T) {
+              got := Calculate(tt.input)
+              if got != tt.want {
+                  t.Errorf("got %d, want %d", got, tt.want)
+              }
+          })
+      }
+  }
+  ```
+  
+  **Bubbletea TUI Testing**:
+  ```go
+  func TestTUI(t *testing.T) {
+      m := model.New()
+      tm := teatest.NewTestModel(t, m)
+      
+      // Send input
+      tm.Send(tea.KeyMsg{Type: tea.KeyEnter})
+      
+      // Wait for update
+      teatest.WaitFor(t, tm.Output(), func(bts []byte) bool {
+          return bytes.Contains(bts, []byte("Expected output"))
+      })
+  }
+  ```
+</Accordion>
+
+### skill-creator — Create New Skills
+
+<Accordion title="Purpose & Usage">
+  **Purpose**: Create new AI agent skills following the Agent Skills specification.
+  
+  **What it covers**:
+  - Agent Skills spec structure
+  - Skill file format (markdown)
+  - Naming conventions
+  - Example patterns
+  - Testing skills
+  - Publishing skills
+  
+  **When to use**: When creating custom skills for your team or the community.
+  
+  **Skill file structure**:
+  ```markdown
+  # Skill Name
+  
+  ## Purpose
+  Brief description of what this skill teaches.
+  
+  ## When to Use
+  Specific scenarios where this skill applies.
+  
+  ## Patterns
+  
+  ### Pattern 1: Name
+  Description and example code.
+  
+  ### Pattern 2: Name
+  Description and example code.
+  
+  ## Anti-patterns
+  What NOT to do and why.
+  
+  ## References
+  Links to official docs, style guides, etc.
+  ```
+  
+  **Output**: A new `.md` skill file ready for agent consumption.
+</Accordion>
+
+## Planned Skills
+
+Skills currently in development or planned for future releases:
+
+### Frontend Skills
+
+<CardGroup cols={2}>
+  <Card title="react-19" icon="react">
+    React 19 patterns:
+    - Server Components
+    - Server Actions
+    - use() hook
+    - Suspense patterns
+  </Card>
+  
+  <Card title="nextjs-15" icon="N">
+    Next.js 15 App Router:
+    - Routing conventions
+    - Data fetching
+    - Caching strategies
+    - Middleware
+  </Card>
+  
+  <Card title="tailwind-4" icon="palette">
+    Tailwind CSS 4:
+    - Utility-first patterns
+    - Component composition
+    - Responsive design
+    - Custom utilities
+  </Card>
+  
+  <Card title="zustand-5" icon="store">
+    Zustand 5 state:
+    - Store patterns
+    - Middleware usage
+    - DevTools integration
+    - Persistence
+  </Card>
+</CardGroup>
+
+### Validation & AI
+
+<CardGroup cols={2}>
+  <Card title="zod-4" icon="shield-check">
+    Zod 4 validation:
+    - Schema definitions
+    - Type inference
+    - Error handling
+    - Custom validators
+  </Card>
+  
+  <Card title="ai-sdk-5" icon="brain">
+    Vercel AI SDK 5:
+    - Streaming responses
+    - Tool/function calling
+    - Multi-modal inputs
+    - Provider abstraction
+  </Card>
+</CardGroup>
+
+### Testing
+
+<CardGroup cols={2}>
+  <Card title="playwright" icon="browser">
+    Playwright patterns:
+    - E2E test structure
+    - Page objects
+    - Fixtures
+    - Visual regression
+  </Card>
+  
+  <Card title="pytest" icon="flask">
+    Python testing:
+    - Fixture patterns
+    - Parametrization
+    - Mocking
+    - Integration tests
+  </Card>
+</CardGroup>
+
+### Backend
+
+<CardGroup cols={1}>
+  <Card title="django-drf" icon="python">
+    Django REST Framework:
+    - Serializer patterns
+    - ViewSet organization
+    - Authentication
+    - Permissions
+  </Card>
+</CardGroup>
+
+## How Skills Work
+
+### 1. Installation
+
+Skills are copied to agent-specific directories during installation:
+
+| Agent | Skill Directory |
+|-------|----------------|
+| Claude Code | `~/.claude/skills/` |
+| OpenCode | `~/.config/opencode/skill/` |
+| Gemini CLI | `~/.gemini/skills/` |
+| Cursor | `~/.cursor/skills/` |
+| VS Code Copilot | `~/.copilot/skills/` |
+
+### 2. Auto-loading
+
+Agents are configured to automatically load relevant skills based on:
+- **File extensions** — `.tsx` loads React skill
+- **Framework detection** — Next.js project loads nextjs skill
+- **Explicit invocation** — "Use the go-testing skill"
+
+### 3. Skill Application
+
+When a skill is loaded, the agent:
+1. Reads the skill markdown file
+2. Parses patterns and examples
+3. Applies patterns to current task
+4. References skill during code generation
+
+### 4. Skill Updates
+
+Skills are updated when:
+- Running `gentle-ai install` again (overwrites existing skills)
+- Manually pulling latest from skill repository
+- Skills registry is updated (future: auto-update capability)
+
+## Creating Custom Skills
+
+You can create custom skills for your team:
+
+<Steps>
+  <Step title="Invoke skill-creator">
+    ```bash
+    "Create a new skill for our GraphQL API patterns"
+    ```
+  </Step>
+  
+  <Step title="Define the skill">
+    Agent will guide you through:
+    - Purpose and scope
+    - Key patterns
+    - Anti-patterns
+    - Examples
+  </Step>
+  
+  <Step title="Save to skills directory">
+    ```bash
+    ~/.claude/skills/graphql-api.md
+    ```
+  </Step>
+  
+  <Step title="Test the skill">
+    ```bash
+    "Build a GraphQL resolver using our patterns"
+    ```
+  </Step>
+</Steps>
+
+## Skill Priority System
+
+Skills are categorized by priority for preset selection:
+
+| Priority | Description | Included In |
+|----------|-------------|-------------|
+| **P0** | Essential skills used daily | All presets except Minimal |
+| **P1** | Common skills for specific stacks | Full Gentleman only |
+| **P2** | Specialized skills for advanced use cases | Custom selection only |
+
+**Current P0 Skills** (11 total):
+- All 9 SDD skills
+- go-testing
+- skill-creator
+
+## Skill Sources
+
+Skills come from multiple sources:
+
+<Tabs>
+  <Tab title="Built-in">
+    **SDD and Foundation skills** are bundled with Gentle AI.
+    
+    - No network required
+    - Embedded in binary
+    - Always available
+  </Tab>
+  
+  <Tab title="Registry">
+    **Future skills** will be pulled from a central registry.
+    
+    - Latest versions always available
+    - Community contributions
+    - Version pinning support
+  </Tab>
+  
+  <Tab title="Custom">
+    **Your own skills** can be added manually.
+    
+    - Drop `.md` files in skill directory
+    - Reference in system prompt if needed
+    - Share with your team via git
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Install Gentle AI" icon="download" href="/quickstart">
+    Get the skill library configured
+  </Card>
+  
+  <Card title="Components" icon="puzzle-piece" href="/concepts/components">
+    Learn about all 8 ecosystem components
+  </Card>
+  
+  <Card title="Presets" icon="sliders" href="/concepts/presets">
+    Choose which skills to install
+  </Card>
+  
+  <Card title="SDD Workflow" icon="clipboard-list" href="/concepts/components#sdd-spec-driven-development">
+    Deep dive into SDD skills
+  </Card>
+</CardGroup>

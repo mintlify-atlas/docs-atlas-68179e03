@@ -1,0 +1,485 @@
+---
+title: 'Testing Strategy'
+description: 'Test coverage, running tests, and testing philosophy'
+---
+
+## Overview
+
+Gentle AI has comprehensive test coverage across unit, integration, and end-to-end tests:
+
+- **50 test files** across the codebase
+- **260+ test functions** covering all major components
+- **78 E2E test functions** running in Docker
+- **17 golden files** for snapshot testing
+
+See `/home/daytona/workspace/source/README.md:367`
+
+## Test Categories
+
+### Unit Tests
+
+Every package has focused unit tests:
+
+```bash
+# Run all unit tests
+go test ./...
+
+# With coverage
+go test -cover ./...
+
+# Verbose output
+go test -v ./...
+```
+
+**Coverage areas**:
+
+- **System detection**: OS, distro, package manager detection
+- **Dependency resolution**: Version parsing, comparison, detection
+- **Agent adapters**: Path resolution, capability checks
+- **Planner**: Topological sort, dependency expansion
+- **Pipeline**: Stage execution, rollback logic
+- **File merge**: Section injection, marker parsing
+- **Components**: Install logic, config generation
+
+### Integration Tests
+
+Tests that verify component interactions:
+
+```go
+func TestInstallPipeline_FullFlow(t *testing.T) {
+    // 1. Detect system
+    detection := system.Detect(context.Background())
+    
+    // 2. Resolve dependencies
+    plan := planner.Resolve(selection)
+    
+    // 3. Build stage plan
+    stages := cli.BuildStagePlan(plan)
+    
+    // 4. Execute
+    result := orchestrator.Execute(stages)
+    
+    // 5. Verify
+    assert.True(t, result.Success)
+}
+```
+
+Integration tests cover:
+- TUI state transitions
+- CLI flag parsing → execution
+- Backup → restore → verify flow
+- Component injection → verification
+
+### E2E Tests
+
+Docker-based end-to-end tests on real Linux distributions:
+
+```bash
+# Run E2E tests (requires Docker)
+RUN_FULL_E2E=1 RUN_BACKUP_TESTS=1 ./e2e/docker-test.sh
+```
+
+See `/home/daytona/workspace/source/e2e/docker-test.sh`
+
+**Test environments**:
+
+- **Ubuntu 22.04** (`e2e/Dockerfile.ubuntu`)
+- **Arch Linux** (`e2e/Dockerfile.arch`)
+
+E2E tests verify:
+
+- Fresh install on clean system
+- Dependency installation (apt/pacman)
+- Agent detection and configuration
+- Component installation
+- Backup and restore
+- Health verification
+- Dry-run accuracy
+
+## Test Structure
+
+### Example: System Detection Tests
+
+```go
+func TestDetectLinuxDistro(t *testing.T) {
+    tests := []struct {
+        name      string
+        osRelease string
+        want      string
+    }{
+        {
+            name: "ubuntu",
+            osRelease: `ID=ubuntu\nID_LIKE=debian\nVERSION_ID="22.04"`,
+            want: "ubuntu",
+        },
+        {
+            name: "pop_os (ubuntu derivative)",
+            osRelease: `ID=pop\nID_LIKE="ubuntu debian"`,
+            want: "ubuntu",
+        },
+        {
+            name: "arch",
+            osRelease: `ID=arch\nID_LIKE=archlinux`,
+            want: "arch",
+        },
+        {
+            name: "manjaro (arch derivative)",
+            osRelease: `ID=manjaro\nID_LIKE=arch`,
+            want: "arch",
+        },
+    }
+    
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := detectLinuxDistro(tt.osRelease)
+            assert.Equal(t, tt.want, got)
+        })
+    }
+}
+```
+
+See `/home/daytona/workspace/source/internal/system/detect_test.go`
+
+### Example: Dependency Resolution Tests
+
+```go
+func TestTopologicalSort(t *testing.T) {
+    graph := map[ComponentID][]ComponentID{
+        "sdd":    {"skills"},
+        "skills": {},
+        "engram": {},
+    }
+    
+    order, err := TopologicalSort(graph)
+    require.NoError(t, err)
+    
+    // "skills" must come before "sdd"
+    skillsIdx := indexOf(order, "skills")
+    sddIdx := indexOf(order, "sdd")
+    assert.Less(t, skillsIdx, sddIdx)
+}
+```
+
+See `/home/daytona/workspace/source/internal/planner/order_test.go`
+
+### Example: Agent Adapter Tests
+
+```go
+func TestClaudeAdapter_Paths(t *testing.T) {
+    adapter := claude.Adapter{}
+    homeDir := "/home/test"
+    
+    tests := []struct {
+        name string
+        got  string
+        want string
+    }{
+        {
+            name: "GlobalConfigDir",
+            got:  adapter.GlobalConfigDir(homeDir),
+            want: filepath.Join(homeDir, ".claude"),
+        },
+        {
+            name: "SkillsDir",
+            got:  adapter.SkillsDir(homeDir),
+            want: filepath.Join(homeDir, ".claude", "skills"),
+        },
+        {
+            name: "SystemPromptFile",
+            got:  adapter.SystemPromptFile(homeDir),
+            want: filepath.Join(homeDir, ".claude", "CLAUDE.md"),
+        },
+    }
+    
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            assert.Equal(t, tt.want, tt.got)
+        })
+    }
+}
+```
+
+All 5 agent adapters (Claude, OpenCode, Gemini, Cursor, VS Code) have path resolution tests.
+
+## Golden File Testing
+
+Component output is tested against golden files:
+
+```go
+func TestPersonaInjection_GentlemanMode(t *testing.T) {
+    result := persona.GenerateSystemPrompt("gentleman", "claude-code")
+    
+    goldenFile := "testdata/persona-gentleman-claude.md"
+    if *update {
+        os.WriteFile(goldenFile, []byte(result), 0644)
+    }
+    
+    expected, _ := os.ReadFile(goldenFile)
+    assert.Equal(t, string(expected), result)
+}
+```
+
+**Golden files** (`testdata/`):
+
+- Persona templates (gentleman, neutral)
+- System prompt sections
+- MCP config JSON
+- Settings file snippets
+
+To update golden files:
+
+```bash
+go test ./... -update
+```
+
+## TUI Testing
+
+Bubbletea TUI components use model-based testing:
+
+```go
+func TestTUI_Navigation(t *testing.T) {
+    m := tui.NewModel(detection, "test-version")
+    
+    // Send key events
+    m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+    assert.Equal(t, tui.ScreenAgents, m.CurrentScreen)
+    
+    m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+    assert.Equal(t, 1, m.AgentCursor)
+}
+```
+
+See `/home/daytona/workspace/source/internal/tui/model_test.go`
+
+TUI tests cover:
+- Screen transitions
+- Cursor navigation
+- Selection state
+- Progress updates
+
+## E2E Test Details
+
+### Test Script Structure
+
+E2E tests are bash functions in `e2e/e2e_test.sh`:
+
+```bash
+test_install_minimal() {
+    echo "TEST: Minimal install (engram only)"
+    
+    # Run install
+    gentle-ai install \
+        --agent claude-code \
+        --component engram \
+        --persona neutral \
+        --non-interactive
+    
+    # Verify config files
+    assert_file_exists "$HOME/.claude/CLAUDE.md"
+    assert_file_contains "$HOME/.claude/.claude.json" "engram"
+    
+    # Verify binary
+    assert_command_exists "engram"
+    
+    # Health check
+    engram --version
+}
+```
+
+See `/home/daytona/workspace/source/e2e/e2e_test.sh`
+
+### E2E Test Cases
+
+**78 E2E test functions** covering:
+
+1. **Installation scenarios**:
+   - Minimal preset
+   - Full Gentleman preset
+   - Custom component selection
+   - Multiple agents
+
+2. **Dependency handling**:
+   - Fresh system (no deps)
+   - Partial deps (some missing)
+   - Version conflicts
+
+3. **Agent configuration**:
+   - Single agent
+   - Multiple agents
+   - Agent-specific features
+
+4. **Backup/Restore**:
+   - Backup before install
+   - Restore on failure
+   - Multiple backups
+
+5. **Dry-run**:
+   - Dry-run accuracy
+   - No file changes
+   - Plan preview
+
+6. **Verification**:
+   - Health checks
+   - Config validation
+   - Service status
+
+### Running E2E Tests
+
+```bash
+# Full E2E suite (Ubuntu + Arch)
+RUN_FULL_E2E=1 ./e2e/docker-test.sh
+
+# With backup tests
+RUN_FULL_E2E=1 RUN_BACKUP_TESTS=1 ./e2e/docker-test.sh
+
+# Ubuntu only
+docker build -f e2e/Dockerfile.ubuntu -t gentle-ai-test-ubuntu .
+docker run --rm gentle-ai-test-ubuntu
+
+# Arch only
+docker build -f e2e/Dockerfile.arch -t gentle-ai-test-arch .
+docker run --rm gentle-ai-test-arch
+```
+
+## Test Coverage by Package
+
+| Package | Test Files | Coverage Focus |
+|---------|-----------|----------------|
+| `system` | 4 | OS detection, dependency parsing, version comparison |
+| `planner` | 3 | Dependency graph, topological sort, resolution |
+| `pipeline` | 2 | Stage execution, rollback, progress tracking |
+| `agents/*` | 5 | Path resolution, capability checks, detection |
+| `components/*` | 15 | Install logic, file injection, config generation |
+| `backup` | 2 | Snapshot creation, restore, manifest parsing |
+| `tui` | 3 | Navigation, selection, screen transitions |
+| `cli` | 2 | Flag parsing, dry-run, orchestration |
+| `verify` | 1 | Health checks, reporting |
+
+## Smoke Tests
+
+Quick validation without full installation:
+
+```bash
+# Dry-run smoke test (macOS/Linux)
+gentle-ai install --dry-run --agent claude-code --preset minimal
+
+# Dry-run smoke test (Windows)
+gentle-ai.exe install --dry-run --agent claude-code --preset minimal
+```
+
+Dry-run tests:
+- Validate all flags
+- Run system detection
+- Resolve dependencies
+- Build stage plan
+- Show plan (no execution)
+
+## Testing Philosophy
+
+<CardGroup cols={2}>
+  <Card title="Fast Feedback" icon="gauge-high">
+    Unit tests run in milliseconds. Full test suite completes in seconds. E2E tests run in Docker for isolation.
+  </Card>
+  
+  <Card title="Platform Coverage" icon="globe">
+    Tests run on macOS (dev), Linux (Docker E2E), and Windows (CI). All platforms validated.
+  </Card>
+  
+  <Card title="Real Scenarios" icon="check">
+    E2E tests use real package managers (apt/pacman), real agents, real configs. No mocks for integration.
+  </Card>
+  
+  <Card title="Regression Protection" icon="shield">
+    Golden files catch unintended output changes. Every agent adapter has path tests to prevent platform bugs.
+  </Card>
+</CardGroup>
+
+## Running Tests Locally
+
+### Prerequisites
+
+- Go 1.24+
+- Docker (for E2E tests)
+
+### Commands
+
+```bash
+# Unit tests only
+go test ./...
+
+# With coverage report
+go test -cover ./...
+
+# Verbose output
+go test -v ./...
+
+# Specific package
+go test ./internal/system/...
+
+# Update golden files
+go test ./... -update
+
+# E2E tests (requires Docker)
+RUN_FULL_E2E=1 ./e2e/docker-test.sh
+```
+
+## CI/CD Testing
+
+Tests run on every commit:
+
+1. **Unit tests**: All packages
+2. **Integration tests**: Full pipeline
+3. **E2E tests**: Ubuntu + Arch in Docker
+4. **Cross-platform builds**: macOS, Linux, Windows
+
+All tests must pass before merge.
+
+## Adding New Tests
+
+### For a New Component
+
+1. Create `internal/components/<name>/<name>_test.go`
+2. Test install logic:
+   ```go
+   func TestInstall_ComponentName(t *testing.T) {
+       // Test component installation
+   }
+   ```
+3. Test config generation (use golden files)
+4. Test platform-specific paths
+
+### For a New Agent
+
+1. Create `internal/agents/<name>/adapter_test.go`
+2. Test all interface methods
+3. Test path resolution on all platforms:
+   ```go
+   func TestAdapter_Paths_CrossPlatform(t *testing.T) {
+       // Use filepath.Join, test on Windows too
+   }
+   ```
+4. Test detection logic
+
+### For E2E Scenarios
+
+1. Add function to `e2e/e2e_test.sh`:
+   ```bash
+   test_my_scenario() {
+       echo "TEST: My scenario"
+       gentle-ai install --agent ... --component ...
+       assert_file_exists "..."
+       assert_command_exists "..."
+   }
+   ```
+2. Add to test list in `e2e/docker-test.sh`
+
+## Test Data
+
+Test fixtures in `testdata/`:
+
+- **Golden files**: Expected output for components
+- **Mock configs**: Sample agent configurations
+- **OS release files**: Sample `/etc/os-release` content
+- **Dependency output**: Sample version command output
+
+Never commit sensitive data (API keys, tokens) to test fixtures.

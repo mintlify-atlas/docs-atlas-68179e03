@@ -1,0 +1,638 @@
+---
+title: 'Troubleshooting'
+description: 'Common issues, solutions, and debugging techniques'
+---
+
+## Common Issues
+
+### Installation Issues
+
+#### "Command not found: gentle-ai"
+
+**Cause**: Binary not in PATH after installation.
+
+**Solution**:
+
+```bash
+# macOS/Linux: Add to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# Or if installed via Homebrew
+brew install gentle-ai
+
+# Windows: Add to PATH
+$env:Path += ";$env:LOCALAPPDATA\Programs"
+```
+
+Verify:
+
+```bash
+gentle-ai --version
+```
+
+#### "Node.js version too old"
+
+**Cause**: System has Node.js < 18.0, but agents require 20+.
+
+**Solution**:
+
+**macOS**:
+```bash
+brew install node@20
+```
+
+**Ubuntu/Debian**:
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+**Arch**:
+```bash
+sudo pacman -S nodejs npm
+```
+
+**Windows**:
+```powershell
+winget install OpenJS.NodeJS.LTS
+```
+
+Verify:
+
+```bash
+node --version  # Should show v20.x.x or higher
+```
+
+#### "Homebrew not found" (macOS)
+
+**Cause**: Homebrew not installed.
+
+**Solution**:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Follow post-install instructions to add to PATH
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+
+#### "Permission denied" during installation
+
+**Cause**: Installing to system directory without sudo.
+
+**Solution**:
+
+**Linux**: Use sudo for system packages:
+```bash
+sudo apt-get install nodejs
+sudo mv /tmp/engram /usr/local/bin/engram
+```
+
+**macOS**: Don't use sudo with Homebrew:
+```bash
+brew install node  # No sudo!
+```
+
+**npm global installs**:
+```bash
+# If npm requires sudo, use a version manager instead
+curl -fsSL https://fnm.vercel.app/install | bash
+fnm install 20
+fnm use 20
+
+# Now npm -g works without sudo
+npm install -g @anthropic-ai/claude-code
+```
+
+### Dependency Issues
+
+#### "Missing required: git, curl, node"
+
+**Cause**: Fresh system without prerequisites.
+
+**Solution**: Install missing dependencies based on platform.
+
+**macOS**:
+```bash
+# git (via Xcode Command Line Tools)
+xcode-select --install
+
+# curl (pre-installed)
+# node
+brew install node@20
+```
+
+**Ubuntu/Debian**:
+```bash
+sudo apt-get update
+sudo apt-get install -y git curl
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+**Arch**:
+```bash
+sudo pacman -S git curl nodejs npm
+```
+
+**Windows**:
+```powershell
+winget install Git.Git
+winget install OpenJS.NodeJS.LTS
+# curl is pre-installed on Windows 10+
+```
+
+#### "npm ERR! code EACCES"
+
+**Cause**: npm trying to write to system directory.
+
+**Solution**: Use a Node.js version manager:
+
+**fnm (recommended)**:
+```bash
+# Install fnm
+curl -fsSL https://fnm.vercel.app/install | bash
+
+# Restart shell, then:
+fnm install 20
+fnm use 20
+fnm default 20
+
+# Verify npm prefix is user-writable
+npm config get prefix  # Should be under ~/.fnm or ~/
+```
+
+**nvm**:
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 20
+nvm use 20
+nvm alias default 20
+```
+
+### Agent Configuration Issues
+
+#### "Agent not detected" after installation
+
+**Cause**: Agent installed but config directory doesn't exist yet.
+
+**Solution**: Run the agent once to initialize:
+
+```bash
+# Claude Code
+claude --version
+
+# OpenCode
+opencode --version
+
+# Gemini CLI
+gemini --version
+```
+
+Then re-run gentle-ai:
+
+```bash
+gentle-ai install --agent claude-code --preset full-gentleman
+```
+
+#### "Skills not loading" in agent
+
+**Cause**: Skills installed to wrong directory or agent config not updated.
+
+**Verify skills directory**:
+
+```bash
+# Claude Code
+ls ~/.claude/skills/
+
+# OpenCode
+ls ~/.config/opencode/skill/
+
+# Check for SDD skills
+ls ~/.claude/skills/ | grep sdd-
+```
+
+**Expected output**:
+```
+sdd-apply/
+sdd-archive/
+sdd-design/
+sdd-explore/
+sdd-propose/
+sdd-spec/
+sdd-tasks/
+sdd-verify/
+```
+
+**Fix**: Re-run installation:
+
+```bash
+gentle-ai install --agent claude-code --component skills,sdd
+```
+
+#### "Persona not applied"
+
+**Cause**: System prompt file not updated.
+
+**Verify**:
+
+```bash
+# Claude Code
+cat ~/.claude/CLAUDE.md | grep -i "gentleman"
+
+# OpenCode
+cat ~/.config/opencode/opencode.json | grep -i "gentleman"
+```
+
+**Fix**: Re-inject persona:
+
+```bash
+gentle-ai install --agent claude-code --component persona --persona gentleman
+```
+
+### Component-Specific Issues
+
+#### Engram: "Connection refused" on localhost:7437
+
+**Cause**: Engram server not running.
+
+**Check status**:
+
+```bash
+# macOS
+brew services list | grep engram
+
+# Linux (systemd)
+systemctl --user status engram
+
+# Manual check
+lsof -i :7437
+```
+
+**Start manually**:
+
+```bash
+engram server --port 7437 &
+```
+
+**Configure auto-start**:
+
+**macOS**:
+```bash
+brew services start engram
+```
+
+**Linux**:
+```bash
+systemctl --user enable engram
+systemctl --user start engram
+```
+
+**Verify**:
+
+```bash
+curl http://localhost:7437/health
+# Should return: {"status":"ok"}
+```
+
+#### GGA: "Pre-commit hook not running"
+
+**Cause**: Git hooks not installed in repository.
+
+**Solution**:
+
+```bash
+# Navigate to your project
+cd ~/my-project
+
+# Initialize GGA for this repo
+gga init
+gga install
+
+# Verify hook exists
+ls -la .git/hooks/pre-commit
+```
+
+**Test**:
+
+```bash
+echo "test" > test.txt
+git add test.txt
+git commit -m "test"  # GGA should run
+```
+
+#### GGA: "Provider not found: claude"
+
+**Cause**: GGA configured for Claude Code but binary not in PATH.
+
+**Verify**:
+
+```bash
+which claude
+# If not found, install Claude Code
+npm install -g @anthropic-ai/claude-code
+```
+
+**Check GGA config**:
+
+```bash
+cat ~/.config/gga/config
+# Should show: GGA_PROVIDER=claude
+```
+
+**Change provider**:
+
+```bash
+# Use different provider
+export GGA_PROVIDER=gemini
+# or
+export GGA_PROVIDER=ollama:codellama
+```
+
+#### MCP: "Server not found: context7"
+
+**Cause**: MCP config missing or malformed.
+
+**Verify**:
+
+**Claude Code**:
+```bash
+cat ~/.claude.json | jq '.mcp.servers'
+```
+
+**OpenCode**:
+```bash
+cat ~/.config/opencode/opencode.json | jq '.mcp.servers'
+```
+
+**Expected**:
+```json
+{
+  "context7": {
+    "transport": "http",
+    "url": "https://context7.ai/api"
+  }
+}
+```
+
+**Fix**: Re-inject MCP config:
+
+```bash
+gentle-ai install --agent claude-code --component mcp
+```
+
+### Platform-Specific Issues
+
+#### macOS: "xcrun: error: invalid active developer path"
+
+**Cause**: Xcode Command Line Tools not installed (needed for git).
+
+**Solution**:
+
+```bash
+xcode-select --install
+```
+
+Follow the GUI prompts to install.
+
+#### Linux: "E: Unable to locate package nodejs"
+
+**Cause**: Using outdated apt repository.
+
+**Solution**: Add NodeSource repository:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get update
+sudo apt-get install -y nodejs
+```
+
+#### Windows: "Execution policy error"
+
+**Cause**: PowerShell execution policy prevents running scripts.
+
+**Solution**:
+
+```powershell
+# Temporarily allow scripts
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+# Run installer
+irm https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.ps1 | iex
+
+# Restore policy
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Restricted
+```
+
+#### Windows: "Antivirus flagged gentle-ai.exe"
+
+**Cause**: Unsigned Go binary flagged heuristically.
+
+**Solution**: Verify integrity with checksum:
+
+```powershell
+# Download checksums.txt from release
+$hash = Get-FileHash .\gentle-ai_0.1.0_windows_amd64.zip -Algorithm SHA256
+
+# Compare with checksums.txt
+Select-String -Path checksums.txt -Pattern "gentle-ai_0.1.0_windows_amd64.zip"
+```
+
+If hashes match, add exception in antivirus software.
+
+### Backup and Restore Issues
+
+#### "Backup not found"
+
+**Cause**: Backup directory empty or deleted.
+
+**Check backups**:
+
+```bash
+ls -la ~/.gentle-ai/backups/
+```
+
+**List via TUI**:
+
+```bash
+gentle-ai
+# Navigate to "Backup Management" screen
+```
+
+**Manual backup** before making changes:
+
+```bash
+mkdir -p ~/.gentle-ai/backups/manual-$(date +%s)
+cp -r ~/.claude ~/.gentle-ai/backups/manual-$(date +%s)/claude
+cp -r ~/.config/opencode ~/.gentle-ai/backups/manual-$(date +%s)/opencode
+```
+
+#### "Restore failed: permission denied"
+
+**Cause**: Target directory not writable.
+
+**Solution**: Check permissions:
+
+```bash
+ls -ld ~/.claude
+# Should show: drwxr-xr-x  ... ~/.claude
+
+# Fix permissions
+chmod -R u+w ~/.claude
+```
+
+### Debugging Techniques
+
+#### Enable Verbose Logging
+
+```bash
+# Set debug environment variable
+export GENTLE_AI_DEBUG=1
+
+# Run with verbose output
+gentle-ai install --agent claude-code --preset minimal 2>&1 | tee install.log
+```
+
+#### Dry-Run for Diagnosis
+
+See what would happen without making changes:
+
+```bash
+gentle-ai install --dry-run \
+  --agent claude-code \
+  --preset full-gentleman
+```
+
+Dry-run shows:
+- Detected system info
+- Resolved dependencies
+- Planned steps
+- No actual execution
+
+#### Check Detection Results
+
+```bash
+# See what gentle-ai detects
+gentle-ai
+# Look at "System Detection" screen
+```
+
+**Detection shows**:
+- OS, arch, distro
+- Installed tools (git, curl, node, npm, brew)
+- Detected agents
+- Existing configs
+- Missing dependencies
+
+#### Inspect Configs Manually
+
+**Claude Code**:
+```bash
+cat ~/.claude/CLAUDE.md
+cat ~/.claude/settings.json
+cat ~/.claude.json  # MCP config
+ls ~/.claude/skills/
+```
+
+**OpenCode**:
+```bash
+cat ~/.config/opencode/opencode.json
+ls ~/.config/opencode/skill/
+ls ~/.config/opencode/commands/
+```
+
+**Engram**:
+```bash
+engram --version
+engram status
+curl http://localhost:7437/health
+```
+
+**GGA**:
+```bash
+gga --version
+gga status
+cat ~/.config/gga/config
+```
+
+## Getting Help
+
+### Check Documentation
+
+- [Installation Guide](/installation)
+- [Architecture](/advanced/architecture)
+- [Dependency Management](/advanced/dependency-management)
+- [Platform Support](/advanced/platform-support)
+
+### GitHub Issues
+
+Report bugs or request features:
+
+```
+https://github.com/Gentleman-Programming/gentle-ai/issues
+```
+
+**Include**:
+- OS and version (macOS 14.2, Ubuntu 22.04, etc.)
+- Output of `gentle-ai --version`
+- Full error message
+- Steps to reproduce
+- Output of dry-run if applicable
+
+### Community Support
+
+Join discussions:
+
+```
+https://github.com/Gentleman-Programming/gentle-ai/discussions
+```
+
+## Quick Fixes Summary
+
+<CardGroup cols={2}>
+  <Card title="Can't find gentle-ai" icon="terminal">
+    Add to PATH: `export PATH="$HOME/.local/bin:$PATH"`
+  </Card>
+  
+  <Card title="Node.js too old" icon="node">
+    Install v20+: `brew install node@20` or use fnm/nvm
+  </Card>
+  
+  <Card title="npm permission errors" icon="lock">
+    Use fnm: `curl -fsSL https://fnm.vercel.app/install | bash`
+  </Card>
+  
+  <Card title="Engram not running" icon="server">
+    Start service: `brew services start engram` (macOS) or `systemctl --user start engram` (Linux)
+  </Card>
+  
+  <Card title="GGA not triggering" icon="shield">
+    Run in repo: `gga init && gga install`
+  </Card>
+  
+  <Card title="Skills not loading" icon="book">
+    Re-install: `gentle-ai install --agent <agent> --component skills,sdd`
+  </Card>
+  
+  <Card title="Windows antivirus" icon="shield-halved">
+    Verify checksum from release, add exception
+  </Card>
+  
+  <Card title="Config corrupted" icon="rotate-left">
+    Restore backup: Use TUI → Backup Management → Restore
+  </Card>
+</CardGroup>
+
+## Still Having Issues?
+
+If none of these solutions work:
+
+1. **Run diagnostics**: `gentle-ai install --dry-run --agent <agent> --preset minimal`
+2. **Check logs**: Look for error messages in terminal output
+3. **Manual reset**: Remove configs and reinstall:
+   ```bash
+   rm -rf ~/.claude ~/.config/opencode ~/.gemini
+   gentle-ai install --agent <agent> --preset full-gentleman
+   ```
+4. **File an issue**: Include full error output and system info

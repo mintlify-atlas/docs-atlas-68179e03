@@ -1,0 +1,308 @@
+---
+title: gentle-ai install
+description: Install and configure AI agents with the Gentleman ecosystem
+---
+
+## Overview
+
+The `gentle-ai install` command configures one or more AI coding agents with the Gentleman AI ecosystem — injecting memory, skills, workflow, MCP servers, persona, and security permissions.
+
+This command supports both **interactive TUI mode** (no flags) and **CLI mode** (with explicit flags).
+
+## Usage
+
+```bash
+gentle-ai install [flags]
+```
+
+### Interactive Mode
+
+Run without flags to launch the Bubbletea TUI:
+
+```bash
+gentle-ai install
+```
+
+The TUI guides you through:
+1. Agent selection (detected agents + manual selection)
+2. Preset selection (full-gentleman, ecosystem-only, minimal, custom)
+3. Component selection (if custom preset)
+4. Skill selection (if custom preset)
+5. Persona selection (gentleman, neutral, custom)
+6. Dependency review
+7. Installation review
+8. Execution with progress tracking
+
+### CLI Mode
+
+Use flags for non-interactive, scriptable installations:
+
+```bash
+gentle-ai install \
+  --agent claude-code,opencode \
+  --preset full-gentleman
+```
+
+## Flags
+
+<ParamField path="--agent" type="string">
+  Comma-separated list of agents to configure. Alias: `--agents`.
+  
+  **Valid values**: `claude-code`, `opencode`, `gemini-cli`, `cursor`, `vscode-copilot`
+  
+  **Example**: `--agent claude-code,opencode`
+</ParamField>
+
+<ParamField path="--preset" type="string">
+  Preset configuration bundle. Determines which components and skills are installed.
+  
+  **Valid values**:
+  - `full-gentleman` — All components + all skills + gentleman persona
+  - `ecosystem-only` — All components + P0 skills (SDD workflow + foundation skills) + gentleman persona
+  - `minimal` — Engram + Persona + Permissions only
+  - `custom` — You pick components, skills, and persona individually
+  
+  **Example**: `--preset full-gentleman`
+</ParamField>
+
+<ParamField path="--component" type="string">
+  Comma-separated list of components to install. Alias: `--components`.
+  
+  Required when `--preset custom` is used.
+  
+  **Valid values**: `engram`, `sdd`, `skills`, `context7`, `persona`, `permissions`, `gga`, `theme`
+  
+  **Example**: `--component engram,sdd,skills,context7,persona,permissions`
+</ParamField>
+
+<ParamField path="--skill" type="string">
+  Comma-separated list of skills to install. Alias: `--skills`.
+  
+  Optional when `--preset custom` is used. If omitted with custom preset, no skills are installed.
+  
+  **Valid values**: `sdd-init`, `sdd-explore`, `sdd-propose`, `sdd-spec`, `sdd-design`, `sdd-tasks`, `sdd-apply`, `sdd-verify`, `sdd-archive`, `go-testing`, `skill-creator`
+  
+  **Example**: `--skill go-testing,skill-creator`
+</ParamField>
+
+<ParamField path="--persona" type="string">
+  Persona mode for agent behavior.
+  
+  **Valid values**:
+  - `gentleman` — Teaching-oriented mentor persona that pushes back on bad practices and explains the why
+  - `neutral` — Clean, professional tone with no personality overlay
+  - `custom` — Bring your own persona instructions (you provide the persona file)
+  
+  **Example**: `--persona gentleman`
+</ParamField>
+
+<ParamField path="--dry-run" type="boolean">
+  Preview the installation plan without executing changes.
+  
+  Shows:
+  - Selected agents and detection results
+  - Resolved components in dependency order
+  - Install commands that would be executed
+  - Files that would be created or modified
+  - Missing system dependencies
+  
+  **Example**: `--dry-run`
+</ParamField>
+
+## Examples
+
+### Full Ecosystem for Multiple Agents
+
+```bash
+gentle-ai install \
+  --agent claude-code,opencode,gemini-cli \
+  --preset full-gentleman
+```
+
+Installs all components, all skills, and gentleman persona for three agents.
+
+### Minimal Setup for Cursor
+
+```bash
+gentle-ai install \
+  --agent cursor \
+  --preset minimal
+```
+
+Installs only Engram (memory), Persona, and Permissions.
+
+### Custom Configuration
+
+```bash
+gentle-ai install \
+  --agent claude-code \
+  --preset custom \
+  --component engram,sdd,skills,context7,persona,permissions \
+  --skill go-testing,skill-creator \
+  --persona gentleman
+```
+
+Manually selects components and skills for fine-grained control.
+
+### Dry Run Preview
+
+```bash
+gentle-ai install --dry-run \
+  --agent opencode \
+  --preset full-gentleman
+```
+
+Previews the installation plan without making any changes.
+
+## Output
+
+### CLI Mode Success
+
+```
+✓ All checks passed
+
+Installed:
+- engram (MCP server)
+- sdd (system prompt + skills)
+- skills (11 skill files)
+- context7 (MCP server)
+- persona (gentleman mode)
+- permissions (security-first defaults)
+- gga (AI provider switcher)
+- theme (Kanagawa color scheme)
+
+Agent configurations:
+- claude-code: ~/.claude/
+- opencode: ~/.config/opencode/
+
+Next steps:
+  - Restart your agents to load new configuration
+  - For GGA: run `gga init` and `gga install` in each project
+```
+
+### Dry Run Output
+
+```
+=== DRY RUN ===
+
+Agents:
+  claude-code (detected: yes, path: ~/.claude)
+  opencode (detected: yes, path: ~/.config/opencode)
+
+Components (dependency order):
+  1. engram
+  2. sdd
+  3. skills
+  4. context7
+  5. persona
+  6. permissions
+  7. gga
+  8. theme
+
+Install commands:
+  npm install -g @upstash/engram
+  npm install -g @upstash/context7-mcp
+  curl -fsSL https://raw.githubusercontent.com/Gentleman-Programming/gga/main/install.sh | bash
+
+Files to be created/modified:
+  ~/.claude/CLAUDE.md
+  ~/.claude/mcp/engram.json
+  ~/.claude/mcp/context7.json
+  ~/.claude/skills/go-testing/SKILL.md
+  ~/.claude/settings.json
+  ~/.config/opencode/AGENTS.md
+  ~/.config/opencode/opencode.json
+  ~/.config/opencode/skills/go-testing/SKILL.md
+
+Missing dependencies: none
+
+No changes were applied (dry-run mode)
+```
+
+## Dependency Management
+
+`gentle-ai install` automatically detects and guides you through installing missing system dependencies:
+
+- **Detected tools**: git, curl, node, npm, brew, go
+- **Version checks**: validates minimum versions where applicable
+- **Platform-aware hints**: suggests `brew install`, `apt install`, `pacman -S`, or `winget install` depending on your OS
+- **Dependency-first approach**: detects → calculates → shows tree → installs → verifies
+
+### Example Missing Dependency Prompt
+
+```
+WARNING: missing dependencies: npm
+
+To install missing dependencies:
+
+macOS:
+  brew install node
+
+Ubuntu/Debian:
+  sudo apt install npm
+
+Arch:
+  sudo pacman -S npm
+
+Windows:
+  winget install OpenJS.NodeJS
+```
+
+## Agent Auto-Install
+
+If you specify an agent that's not installed, `gentle-ai` will attempt to auto-install it:
+
+- **Claude Code**: `npm install -g @anthropic-ai/claude-code` (if npm available)
+- **OpenCode**: `npm install -g @opencode/cli` (if npm available)
+- **Gemini CLI**: `npm install -g @google/gemini-cli` (if npm available)
+- **Cursor**: Cannot auto-install (desktop app — download from cursor.sh)
+- **VS Code Copilot**: Cannot auto-install (desktop app — install VS Code + Copilot extension)
+
+## Backup & Rollback
+
+`gentle-ai install` creates automatic backups before modifying any files:
+
+- **Backup location**: `~/.gentle-ai/backups/<timestamp>/`
+- **Manifest file**: `manifest.json` tracks all backed-up files
+- **Rollback**: Use the TUI backup restore screen or manually restore from backup directory
+
+### Backup Structure
+
+```
+~/.gentle-ai/backups/
+├── 20240313120000.000000000/
+│   ├── manifest.json
+│   ├── .claude/
+│   │   ├── CLAUDE.md
+│   │   └── settings.json
+│   └── .config/
+│       └── opencode/
+│           ├── AGENTS.md
+│           └── opencode.json
+```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|----------|
+| 0 | Success |
+| 1 | General error (invalid flags, unsupported platform, install failure) |
+
+## Related Commands
+
+<CardGroup cols={2}>
+  <Card title="gentle-ai --version" icon="tag" href="/api/version">
+    Print version and exit
+  </Card>
+  <Card title="Config Structures" icon="file-code" href="/api/config-structure">
+    Configuration file formats for each agent
+  </Card>
+</CardGroup>
+
+## Notes
+
+- **System prompt injection**: Uses marker-based merging for Claude Code (preserves user content), full file replacement for OpenCode/Gemini/Cursor/VS Code Copilot
+- **MCP strategy**: Separate JSON files for Claude Code (`~/.claude/mcp/*.json`), merged into settings for OpenCode/Gemini, dedicated `mcp.json` for Cursor/VS Code Copilot
+- **Skills directory**: `~/.claude/skills/`, `~/.config/opencode/skills/`, `~/.gemini/skills/`, `~/.cursor/skills/`, `~/.copilot/skills/`
+- **Windows paths**: `%USERPROFILE%\.claude\`, `%USERPROFILE%\.config\opencode\`, etc.
+- **VS Code Copilot**: System prompt goes to `Code/User/prompts/gentle-ai.instructions.md`, skills to `~/.copilot/skills/`, MCP to `Code/User/mcp.json`

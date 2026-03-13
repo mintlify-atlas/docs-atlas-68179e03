@@ -1,0 +1,166 @@
+---
+title: "Skills Overview"
+description: "Curated AI agent patterns and workflows for software development"
+icon: "brain"
+---
+
+The Gentle AI skill system provides specialized coding patterns and workflows that enhance your AI agent's capabilities. These skills are injected directly into your agent's configuration, giving them structured instructions for common development tasks.
+
+## What Are Skills?
+
+Skills are markdown files that teach AI agents:
+
+- **Coding patterns** - Best practices for specific technologies (Go testing, TDD workflows)
+- **Development workflows** - Structured processes for planning and implementing changes
+- **Project conventions** - Guidelines specific to your codebase
+- **Decision trees** - When to use which approach
+
+## Skill Categories
+
+<CardGroup cols={2}>
+  <Card title="SDD Workflow" icon="diagram-project" href="/skills/sdd-workflow">
+    9-phase Spec-Driven Development workflow for planning before coding
+  </Card>
+  <Card title="Foundation Skills" icon="code" href="/skills/foundation">
+    Core skills for Go testing and creating your own custom skills
+  </Card>
+</CardGroup>
+
+## Complete Skill Catalog
+
+The Gentle AI ecosystem includes **11 curated skills** organized by purpose:
+
+### Spec-Driven Development (SDD)
+
+| Skill | Purpose | Phase |
+|-------|---------|-------|
+| **sdd-init** | Bootstrap SDD context in a project | Initialization |
+| **sdd-explore** | Investigate codebase before committing to a change | Phase 1 |
+| **sdd-propose** | Create change proposal with intent, scope, approach | Phase 2 |
+| **sdd-spec** | Write specifications with requirements and scenarios | Phase 3 |
+| **sdd-design** | Technical design with architecture decisions | Phase 4 |
+| **sdd-tasks** | Break down a change into implementation tasks | Phase 5 |
+| **sdd-apply** | Implement tasks following specs and design | Phase 6 |
+| **sdd-verify** | Validate implementation matches specs | Phase 7 |
+| **sdd-archive** | Sync delta specs to main specs and archive | Phase 8 |
+
+### Foundation Skills
+
+| Skill | Purpose | When to Use |
+|-------|---------|-------------|
+| **go-testing** | Go testing patterns including Bubbletea TUI testing | Writing Go tests, using teatest, adding test coverage |
+| **skill-creator** | Create new AI agent skills following the Agent Skills spec | Creating custom skills, documenting patterns |
+
+## How Skills Work
+
+<Steps>
+<Step title="Installation">
+  When you run `gentle-ai`, skills are written to your agent's configuration directory:
+  
+  ```bash
+  ~/.claude/skills/        # Claude Code
+  ~/.config/opencode/skills/  # OpenCode
+  ~/.gemini/skills/        # Gemini CLI
+  ~/.cursor/skills/        # Cursor
+  ~/.copilot/skills/       # VS Code Copilot
+  ```
+</Step>
+
+<Step title="Skill Loading">
+  Your agent automatically:
+  
+  1. Scans available skills in its configuration directory
+  2. Reads skill frontmatter for trigger keywords
+  3. Loads relevant skills when triggers match the task
+  4. Follows the skill's instructions during execution
+</Step>
+
+<Step title="Skill Execution">
+  When a skill is loaded:
+  
+  - The agent reads the skill's markdown instructions
+  - Follows decision trees and pattern guidelines
+  - Uses code examples as templates
+  - Applies rules and conventions to the task
+</Step>
+</Steps>
+
+## Skill Structure
+
+Each skill file follows a standard format:
+
+```markdown
+---
+name: skill-name
+description: >
+  One-line description.
+  Trigger: When to load this skill.
+license: MIT
+metadata:
+  author: gentleman-programming
+  version: "1.0"
+---
+
+## When to Use
+{Bullet points of when to use}
+
+## Critical Patterns
+{The most important rules}
+
+## Code Examples
+{Minimal, focused examples}
+
+## Commands
+{Common commands}
+
+## Resources
+{Links to templates, docs, examples}
+```
+
+## Presets and Skills
+
+Different installation presets include different skill sets:
+
+| Preset | Skills Included |
+|--------|----------------|
+| **Full Gentleman** | All 11 skills (9 SDD + 2 foundation) |
+| **Ecosystem Only** | All 11 P0 skills |
+| **Minimal** | No skills installed |
+| **Custom** | Choose individual skills |
+
+## Creating Custom Skills
+
+You can create project-specific or personal skills:
+
+1. Use the **skill-creator** skill to guide the process
+2. Follow the Agent Skills specification
+3. Place skills in your agent's skills directory
+4. Reference from your project's `AGENTS.md` file
+
+See the [Foundation Skills](/skills/foundation) page for details on the skill-creator skill.
+
+## Skill Registry
+
+When SDD is initialized in a project, a skill registry is created at `.atl/skill-registry.md`. This registry:
+
+- Lists all available skills (user-level and project-level)
+- Includes skill triggers for automatic loading
+- References project convention files
+- Provides a single source of truth for available skills
+
+The registry is automatically:
+
+- Created during `sdd-init`
+- Updated when new skills are added
+- Stored in Engram (if available) for cross-session persistence
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Learn SDD Workflow" icon="diagram-next" href="/skills/sdd-workflow">
+    Understand the 9-phase development workflow
+  </Card>
+  <Card title="Explore Foundation Skills" icon="wrench" href="/skills/foundation">
+    Go testing and custom skill creation
+  </Card>
+</CardGroup>

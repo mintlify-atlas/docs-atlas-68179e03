@@ -1,0 +1,340 @@
+---
+title: Interactive TUI
+description: Navigate the Gentle AI ecosystem with an intuitive Bubbletea-powered terminal interface
+icon: sparkles
+---
+
+## Overview
+
+The interactive TUI is the default way to run Gentle AI. It provides a visual, step-by-step wizard that guides you through agent selection, component configuration, and installation.
+
+<Note>
+The TUI is built with [Bubbletea](https://github.com/charmbracelet/bubbletea) and features a custom Rose Pine theme for a beautiful terminal experience.
+</Note>
+
+## Launching the TUI
+
+Simply run the command without any arguments:
+
+```bash
+gentle-ai
+```
+
+The TUI will automatically:
+- Detect your operating system and available package managers
+- Scan for existing AI agents on your system
+- Present an interactive wizard for configuration
+
+## Navigation
+
+The TUI uses vi-style keyboard navigation:
+
+<CardGroup cols={2}>
+  <Card title="Navigate Up" icon="arrow-up">
+    Press `k` or `↑` to move up
+  </Card>
+  <Card title="Navigate Down" icon="arrow-down">
+    Press `j` or `↓` to move down
+  </Card>
+  <Card title="Select/Toggle" icon="check">
+    Press `Enter` or `Space` to select or toggle options
+  </Card>
+  <Card title="Go Back" icon="arrow-left">
+    Press `Esc` to return to the previous screen
+  </Card>
+</CardGroup>
+
+<Tip>
+Press `q` or `Ctrl+C` at any time to quit the TUI.
+</Tip>
+
+## Screen Flow
+
+The TUI guides you through these screens in sequence:
+
+<Steps>
+  <Step title="Welcome Screen">
+    Choose between starting a new installation, managing backups, or quitting.
+    
+    The welcome screen displays:
+    - The Gentle AI ASCII logo
+    - Current version number
+    - Update notifications if newer versions are available
+  </Step>
+
+  <Step title="System Detection">
+    Reviews your system environment including:
+    - Operating system and distribution
+    - Package manager (brew, apt, pacman, winget)
+    - Installed AI agents (Claude Code, OpenCode, Gemini CLI, Cursor, VS Code Copilot)
+    - System dependencies (git, curl, node, npm, go)
+    
+    <Info>
+    The detection runs automatically in the background and completes in seconds.
+    </Info>
+  </Step>
+
+  <Step title="Agent Selection">
+    Select which AI agents to configure. Use `Space` to toggle each agent:
+    
+    - **Claude Code** - Anthropic's CLI agent
+    - **OpenCode** - Open source AI coding assistant
+    - **Gemini CLI** - Google's Gemini CLI tool
+    - **Cursor** - AI-powered code editor
+    - **VS Code Copilot** - GitHub Copilot with VS Code integration
+    
+    Agents that are already installed on your system are pre-selected.
+  </Step>
+
+  <Step title="Persona Selection">
+    Choose the AI persona mode:
+    
+    - **Gentleman** - Teaching-oriented mentor that explains the "why" behind decisions
+    - **Neutral** - Clean, professional tone without personality
+    - **Custom** - Bring your own persona instructions
+  </Step>
+
+  <Step title="Preset Selection">
+    Choose a preset configuration bundle:
+    
+    - **Full Gentleman** - All components + all skills + gentleman persona
+    - **Ecosystem Only** - All components + P0 skills + gentleman persona
+    - **Minimal** - Engram + Persona + Permissions only
+    - **Custom** - Manually select individual components
+  </Step>
+
+  <Step title="Dependency Tree">
+    Review the resolved dependency graph showing:
+    - Selected components in installation order
+    - Auto-added dependencies
+    - Component descriptions
+    
+    If you selected the **Custom** preset, you can toggle individual components here with `Space`.
+  </Step>
+
+  <Step title="Review">
+    Final confirmation screen showing:
+    - Selected agents
+    - Persona mode
+    - Preset name
+    - Components to install (in order)
+    - Platform decision (OS, distro, package manager)
+    - Number of prepare and apply steps
+    
+    Press `Enter` to start the installation.
+  </Step>
+
+  <Step title="Installing">
+    Real-time installation progress with:
+    - Animated spinner
+    - Step-by-step status indicators (✓ for success, ✗ for failure)
+    - Scrollable log output
+    
+    The installation includes:
+    1. Dependency checks
+    2. Backup snapshot creation
+    3. Agent configuration
+    4. Component injection
+    
+    <Warning>
+    You cannot go back during installation. If an error occurs, the TUI will automatically roll back changes using the backup snapshot.
+    </Warning>
+  </Step>
+
+  <Step title="Complete">
+    Summary screen showing:
+    - Number of configured agents
+    - Number of installed components
+    - Any failed steps (with error messages)
+    - Missing dependencies with installation hints
+    - Available updates for tools
+    - Post-install instructions (e.g., for GGA project setup)
+    
+    Press `Enter` to exit.
+  </Step>
+</Steps>
+
+## Backup Management
+
+The TUI includes a backup management screen accessible from the welcome menu.
+
+### Viewing Backups
+
+Backups are stored in `~/.gentle-ai/backups/` with timestamps:
+
+```bash
+~/.gentle-ai/backups/20260313120045.123456789/
+```
+
+Each backup contains:
+- `manifest.json` - List of backed-up files with checksums
+- Copies of all configuration files before changes
+
+### Restoring Backups
+
+From the welcome screen:
+
+1. Select "Manage backups"
+2. Use arrow keys to select a backup timestamp
+3. Press `Enter` to restore
+
+The restore operation:
+- Reads the backup manifest
+- Copies files back to their original locations
+- Overwrites current configurations
+- Reports success or failure
+
+<Warning>
+Restoring a backup will overwrite your current agent configurations. This cannot be undone.
+</Warning>
+
+## Update Notifications
+
+The TUI checks for updates in the background when launched. If updates are available, a banner appears on the welcome screen:
+
+```
+Updates available: gentle-ai v1.2.0 → v1.3.0, engram v0.5.0 → v0.6.0
+```
+
+To view detailed update information, run:
+
+```bash
+gentle-ai update
+```
+
+## Error Handling
+
+The TUI handles errors gracefully:
+
+### Pre-Installation Errors
+
+- **Unsupported platform** - Displays an error message with platform requirements
+- **Detection failures** - Shows warning but allows continuing
+- **Missing required dependencies** - Lists dependencies with install hints
+
+### Installation Errors
+
+- **Step failures** - Marks failed steps with ✗ and logs error messages
+- **Rollback triggers** - Automatically restores from backup if critical steps fail
+- **Soft check failures** - Warns but continues (e.g., engram not immediately on PATH)
+
+### Real-Time Logging
+
+The installing screen maintains a scrollable log of all operations:
+
+```
+running: prepare:check-dependencies
+done: prepare:check-dependencies
+running: prepare:backup-snapshot
+done: prepare:backup-snapshot
+running: agent:claude-code
+done: agent:claude-code
+running: component:engram
+FAILED: component:engram — go install: command not found
+pipeline completed with errors
+```
+
+## Advanced Features
+
+### Custom Component Selection
+
+When using the **Custom** preset, the dependency tree screen becomes interactive:
+
+1. Navigate to a component
+2. Press `Space` to toggle it on/off
+3. Press "Continue" to rebuild the dependency graph
+4. Review auto-added dependencies
+
+### Multi-Agent Configuration
+
+You can configure multiple agents in a single run. The TUI will:
+
+- Apply components to all selected agents
+- Create agent-specific configurations
+- Skip unsupported components per agent
+- Report per-agent installation status
+
+### Progress State Tracking
+
+The TUI tracks state across screens:
+
+```go /home/daytona/workspace/source/internal/tui/model.go
+type Model struct {
+    Screen         Screen
+    Selection      model.Selection
+    Detection      system.DetectionResult
+    DependencyPlan planner.ResolvedPlan
+    Progress       ProgressState
+    Execution      pipeline.ExecutionResult
+}
+```
+
+This allows:
+- Going back to previous screens without losing selections
+- Rebuilding dependency plans when components change
+- Resuming from the complete screen after viewing results
+
+## Troubleshooting
+
+### TUI Not Rendering Properly
+
+If the TUI displays garbled text:
+
+<Steps>
+  <Step title="Check terminal emulator">
+    Ensure you're using a terminal that supports ANSI escape codes and UTF-8:
+    - ✅ iTerm2, Alacritty, Ghostty, Windows Terminal
+    - ❌ Very old Terminal.app versions, basic cmd.exe
+  </Step>
+  
+  <Step title="Verify terminal size">
+    The TUI adapts to window size but requires at least 80x24 characters:
+    
+    ```bash
+    echo $COLUMNS $LINES
+    ```
+  </Step>
+  
+  <Step title="Check TERM environment">
+    ```bash
+    echo $TERM
+    ```
+    
+    Should be `xterm-256color` or similar.
+  </Step>
+</Steps>
+
+### Installation Stuck
+
+If the installing screen appears frozen:
+
+1. Check the log output - some steps take time (e.g., `go install`)
+2. Press `Ctrl+C` to safely abort
+3. Check backup directory: `~/.gentle-ai/backups/`
+4. Use CLI mode with `--dry-run` to diagnose
+
+### Backup Restore Failed
+
+If restore fails:
+
+1. Check file permissions in `~/.gentle-ai/backups/`
+2. Verify manifest.json is not corrupted
+3. Manually restore files from the backup directory
+4. Run `gentle-ai install` again to recreate configurations
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CLI Mode" icon="terminal" href="/usage/cli-mode">
+    Learn the command-line interface for scripting and automation
+  </Card>
+  <Card title="Flags Reference" icon="flag" href="/usage/flags-reference">
+    Complete reference for all CLI flags and options
+  </Card>
+  <Card title="Dry Run" icon="eye" href="/usage/dry-run">
+    Preview changes without modifying your system
+  </Card>
+  <Card title="Components" icon="puzzle-piece" href="/concepts/components">
+    Deep dive into ecosystem components
+  </Card>
+</CardGroup>

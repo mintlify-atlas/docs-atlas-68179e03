@@ -1,0 +1,296 @@
+---
+title: 'Cursor'
+description: 'AI-powered IDE with async sub-agents and nested delegation'
+---
+
+Cursor is an AI-powered IDE built on VS Code. It receives full Gentleman stack support with async sub-agents and nested delegation (v2.5+).
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Skills" icon="book-open">
+    Full SDD workflow + foundation skills loaded from `~/.cursor/skills/`
+  </Card>
+  <Card title="MCP Servers" icon="server">
+    Context7 and custom servers via single `mcp.json` file
+  </Card>
+  <Card title="Async Sub-agents" icon="sitemap">
+    Background sub-agents (v2.5+) with nested delegation trees
+  </Card>
+  <Card title="Desktop IDE" icon="desktop">
+    Full VS Code experience with AI-native features
+  </Card>
+</CardGroup>
+
+## Installation
+
+Cursor is a **desktop application** and must be installed manually:
+
+1. Download Cursor from [cursor.sh](https://cursor.sh)
+2. Install the application
+3. Configure with Gentle AI:
+
+```bash
+gentle-ai install --agent cursor --preset full-gentleman
+```
+
+<Warning>
+  Cursor cannot be auto-installed by Gentle AI. Install it manually first, then run `gentle-ai`.
+</Warning>
+
+## Configuration
+
+### Config Directory
+
+All Cursor configuration lives in `~/.cursor/`:
+
+```
+~/.cursor/
+├── rules/
+│   └── gentle-ai.mdc      # System prompt (Gentleman persona + SDD orchestrator)
+├── settings.json          # Cursor settings
+├── mcp.json               # MCP server config
+└── skills/                # Skill files (SDD + foundation)
+    ├── sdd-init.md
+    ├── sdd-propose.md
+    ├── go-testing.md
+    └── ...
+```
+
+### Windows Config Path
+
+```powershell
+%USERPROFILE%\.cursor\
+```
+
+## System Prompt Strategy
+
+Cursor uses **file replacement** for system prompt via `.mdc` files:
+
+- System prompt file: `~/.cursor/rules/gentle-ai.mdc`
+- Cursor automatically loads all `.mdc` files in the `rules/` directory
+- Gentle AI writes the full system prompt on every update
+- Previous content is backed up before replacement
+
+### Example Structure
+
+```markdown
+# Cursor Rules: Gentle AI
+
+## Gentleman Persona
+
+You are a teaching-oriented coding mentor...
+
+## SDD Orchestrator
+
+Spec-Driven Development workflow with 9 phases...
+
+## Skills
+
+You have access to the following skills:
+- sdd-init: Bootstrap SDD context
+- sdd-propose: Create change proposals
+...
+```
+
+## MCP Configuration
+
+Cursor uses a **single MCP config file**:
+
+- Config file: `~/.cursor/mcp.json`
+- All MCP servers are defined in one file
+- Gentle AI merges new servers while preserving existing ones
+
+### Context7 Configuration
+
+Gentle AI installs Context7 MCP server:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"]
+    }
+  }
+}
+```
+
+## Async Sub-agents (v2.5+)
+
+Cursor v2.5+ supports **async sub-agents** with advanced capabilities:
+
+### Features
+
+- **Background execution** — Sub-agents run without blocking the main agent
+- **Nested delegation** — Sub-agents can spawn their own sub-agents
+- **Tree structure** — Complex delegation hierarchies
+- **Progress tracking** — Monitor sub-agent execution in real-time
+
+### How Async Sub-agents Work
+
+1. Main agent receives a complex request
+2. Agent spawns multiple async sub-agents
+3. Sub-agents execute in parallel in the background
+4. Each sub-agent can spawn its own nested sub-agents
+5. Results bubble up the delegation tree
+6. Main agent synthesizes all results
+
+### Example: Parallel Feature Implementation
+
+```
+Main Agent: Implement user authentication
+├── Sub-agent 1: Design database schema
+│   └── Sub-agent 1.1: Generate migration files
+├── Sub-agent 2: Create API endpoints
+│   ├── Sub-agent 2.1: Implement login endpoint
+│   └── Sub-agent 2.2: Implement logout endpoint
+└── Sub-agent 3: Write tests
+    ├── Sub-agent 3.1: Unit tests
+    └── Sub-agent 3.2: Integration tests
+```
+
+All sub-agents execute concurrently, dramatically reducing total execution time.
+
+## Skills
+
+All 11 curated skills are installed:
+
+### SDD Workflow (9 skills)
+
+- `sdd-init` — Bootstrap SDD context
+- `sdd-explore` — Investigate codebase
+- `sdd-propose` — Create change proposals
+- `sdd-spec` — Write specifications
+- `sdd-design` — Technical design
+- `sdd-tasks` — Break down implementation
+- `sdd-apply` — Implement tasks
+- `sdd-verify` — Validate implementation
+- `sdd-archive` — Sync specs and archive
+
+### Foundation Skills (2 skills)
+
+- `go-testing` — Go testing patterns (including Bubbletea TUI testing)
+- `skill-creator` — Create new skills following the Agent Skills spec
+
+Skills are loaded from `~/.cursor/skills/` as markdown files.
+
+## What Gentle AI Installs
+
+When you run `gentle-ai install --agent cursor --preset full-gentleman`:
+
+1. **Creates config directory** at `~/.cursor/` (if not present)
+2. **Writes system prompt** to `rules/gentle-ai.mdc` with Gentleman persona + SDD orchestrator
+3. **Installs 11 skill files** in `~/.cursor/skills/`
+4. **Configures Context7 MCP server** in `mcp.json`
+5. **Installs GGA binary** globally (opt-in per project with `gga init`)
+
+<Note>
+  Cursor itself is **not installed** by Gentle AI. Download it from [cursor.sh](https://cursor.sh) first.
+</Note>
+
+## Platform Notes
+
+### macOS
+
+```bash
+# Install Cursor manually from cursor.sh
+# Then configure:
+brew tap Gentleman-Programming/homebrew-tap
+brew install gentle-ai
+gentle-ai install --agent cursor --preset full-gentleman
+```
+
+### Linux
+
+```bash
+# Install Cursor manually from cursor.sh
+# Then configure:
+gentle-ai install --agent cursor --preset full-gentleman
+```
+
+### Windows
+
+```powershell
+# Install Cursor manually from cursor.sh
+# Then configure:
+gentle-ai.exe install --agent cursor --preset full-gentleman
+```
+
+Config lives in `%USERPROFILE%\.cursor\`
+
+## Verification
+
+After installation, verify the configuration:
+
+```bash
+# Check Cursor is installed (look for app)
+open -a Cursor  # macOS
+cursor          # Linux (if CLI is available)
+
+# Check config directory exists
+ls ~/.cursor/
+
+# Check skills are installed
+ls ~/.cursor/skills/
+
+# Check MCP is configured
+cat ~/.cursor/mcp.json
+
+# Check system prompt
+cat ~/.cursor/rules/gentle-ai.mdc
+```
+
+## Troubleshooting
+
+### Config Directory Not Found
+
+If `~/.cursor/` doesn't exist:
+
+1. Launch Cursor at least once to initialize config
+2. Check if Cursor uses a different config path
+3. Create the directory manually: `mkdir -p ~/.cursor/`
+
+### MCP Server Not Loading
+
+If Context7 doesn't load:
+
+1. Check `~/.cursor/mcp.json` exists
+2. Verify JSON is valid: `cat ~/.cursor/mcp.json | jq`
+3. Test server manually: `npx -y @context7/mcp-server`
+4. Restart Cursor to reload MCP config
+
+### Skills Not Available
+
+If skills aren't loading:
+
+1. Check `~/.cursor/skills/` directory exists
+2. Verify skill files are markdown: `ls ~/.cursor/skills/*.md`
+3. Check system prompt references skills: `grep -i skill ~/.cursor/rules/gentle-ai.mdc`
+4. Restart Cursor to reload rules
+
+### Rules Not Loading
+
+If Cursor doesn't load the Gentleman persona:
+
+1. Check `~/.cursor/rules/` directory exists
+2. Verify `.mdc` file is present: `ls ~/.cursor/rules/*.mdc`
+3. Restart Cursor to reload rules
+4. Check Cursor settings for rules configuration
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="VS Code Copilot" icon="code-compare" href="/agents/vscode-copilot">
+    Alternative IDE with parallel sub-agents
+  </Card>
+  <Card title="Skills Reference" icon="book" href="/components/skills">
+    Learn about the 11 curated skills
+  </Card>
+  <Card title="SDD Workflow" icon="diagram-project" href="/components/sdd">
+    Deep dive into Spec-Driven Development
+  </Card>
+  <Card title="MCP Servers" icon="server" href="/components/context7">
+    Explore Model Context Protocol integration
+  </Card>
+</CardGroup>

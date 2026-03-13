@@ -1,0 +1,369 @@
+---
+title: 'VS Code Copilot'
+description: 'GitHub Copilot integration with parallel sub-agent execution'
+---
+
+VS Code Copilot is GitHub's AI pair programmer integrated into Visual Studio Code. It receives full Gentleman stack support with parallel sub-agent execution.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Skills" icon="book-open">
+    Full SDD workflow + foundation skills loaded from `~/.copilot/skills/`
+  </Card>
+  <Card title="MCP Servers" icon="server">
+    Context7 and custom servers via `Code/User/mcp.json`
+  </Card>
+  <Card title="Parallel Sub-agents" icon="code-branch">
+    `runSubagent` tool with parallel execution and custom definitions
+  </Card>
+  <Card title="VS Code Integration" icon="code">
+    Native integration with VS Code editor and extensions
+  </Card>
+</CardGroup>
+
+## Installation
+
+VS Code Copilot is a **desktop application** and must be installed manually:
+
+1. Download VS Code from [code.visualstudio.com](https://code.visualstudio.com)
+2. Install the GitHub Copilot extension
+3. Configure with Gentle AI:
+
+```bash
+gentle-ai install --agent vscode-copilot --preset full-gentleman
+```
+
+<Warning>
+  VS Code and Copilot cannot be auto-installed by Gentle AI. Install them manually first, then run `gentle-ai`.
+</Warning>
+
+## Configuration
+
+### Config Locations
+
+VS Code Copilot uses **multiple config locations**:
+
+#### Global Skills Directory
+
+```
+~/.copilot/skills/         # Global skills (accessible from all workspaces)
+├── sdd-init.md
+├── sdd-propose.md
+├── go-testing.md
+└── ...
+```
+
+#### VS Code User Directory
+
+**macOS:**
+```
+~/Library/Application Support/Code/User/
+├── prompts/
+│   └── gentle-ai.instructions.md   # System prompt
+├── mcp.json                         # MCP server config
+└── settings.json                    # VS Code settings
+```
+
+**Linux:**
+```
+~/.config/Code/User/
+├── prompts/
+│   └── gentle-ai.instructions.md
+├── mcp.json
+└── settings.json
+```
+
+**Windows:**
+```
+%APPDATA%\Code\User\
+├── prompts\
+│   └── gentle-ai.instructions.md
+├── mcp.json
+└── settings.json
+```
+
+### Workspace Skills (Optional)
+
+You can also define workspace-specific skills:
+
+```
+.github/skills/            # Workspace skills (project-specific)
+└── custom-skill.md
+```
+
+Workspace skills supplement global skills from `~/.copilot/skills/`.
+
+## System Prompt Strategy
+
+VS Code Copilot uses **instructions files**:
+
+- System prompt file: `Code/User/prompts/gentle-ai.instructions.md`
+- Copilot loads all `.instructions.md` files from the prompts directory
+- Gentle AI writes the full system prompt on every update
+- Previous content is backed up before replacement
+
+### Example Structure
+
+```markdown
+# Gentle AI Instructions
+
+## Gentleman Persona
+
+You are a teaching-oriented coding mentor...
+
+## SDD Orchestrator
+
+Spec-Driven Development workflow with 9 phases...
+
+## Skills
+
+You have access to the following skills:
+- sdd-init: Bootstrap SDD context
+- sdd-propose: Create change proposals
+...
+```
+
+## MCP Configuration
+
+VS Code Copilot uses a **single MCP config file**:
+
+- Config file: `Code/User/mcp.json`
+- All MCP servers are defined in one file
+- Gentle AI merges new servers while preserving existing ones
+
+### Context7 Configuration
+
+Gentle AI installs Context7 MCP server:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"]
+    }
+  }
+}
+```
+
+## Parallel Sub-agents
+
+VS Code Copilot uses the **`runSubagent` tool** for delegation:
+
+### Features
+
+- **Parallel execution** — Multiple sub-agents run simultaneously
+- **Custom agent definitions** — Define specialized sub-agents
+- **Isolated context** — Each sub-agent has scoped context
+- **Result aggregation** — Main agent synthesizes parallel results
+
+### How Parallel Sub-agents Work
+
+1. Main agent receives a complex request
+2. Agent spawns multiple sub-agents using `runSubagent`
+3. Sub-agents execute in parallel
+4. Each sub-agent returns results independently
+5. Main agent aggregates results
+6. Main agent continues with enriched context
+
+### Example: Parallel Documentation
+
+```
+Main Agent: Document the entire API
+├── Sub-agent 1: Document authentication endpoints (parallel)
+├── Sub-agent 2: Document user endpoints (parallel)
+├── Sub-agent 3: Document admin endpoints (parallel)
+└── Sub-agent 4: Generate API overview (parallel)
+
+All execute simultaneously → Results aggregated → Documentation complete
+```
+
+## Skills
+
+All 11 curated skills are installed:
+
+### SDD Workflow (9 skills)
+
+- `sdd-init` — Bootstrap SDD context
+- `sdd-explore` — Investigate codebase
+- `sdd-propose` — Create change proposals
+- `sdd-spec` — Write specifications
+- `sdd-design` — Technical design
+- `sdd-tasks` — Break down implementation
+- `sdd-apply` — Implement tasks
+- `sdd-verify` — Validate implementation
+- `sdd-archive` — Sync specs and archive
+
+### Foundation Skills (2 skills)
+
+- `go-testing` — Go testing patterns (including Bubbletea TUI testing)
+- `skill-creator` — Create new skills following the Agent Skills spec
+
+Skills are loaded from:
+- `~/.copilot/skills/` (global)
+- `.github/skills/` (workspace, optional)
+- `~/.claude/skills/` (fallback for compatibility)
+- `.claude/skills/` (workspace fallback)
+
+## What Gentle AI Installs
+
+When you run `gentle-ai install --agent vscode-copilot --preset full-gentleman`:
+
+1. **Creates global skills directory** at `~/.copilot/skills/`
+2. **Installs 11 skill files** in `~/.copilot/skills/`
+3. **Writes system prompt** to `Code/User/prompts/gentle-ai.instructions.md`
+4. **Configures Context7 MCP server** in `Code/User/mcp.json`
+5. **Installs GGA binary** globally (opt-in per project with `gga init`)
+
+<Note>
+  VS Code and Copilot are **not installed** by Gentle AI. Install them manually first.
+</Note>
+
+## Platform Notes
+
+### macOS
+
+```bash
+# Install VS Code and Copilot manually
+# Then configure:
+brew tap Gentleman-Programming/homebrew-tap
+brew install gentle-ai
+gentle-ai install --agent vscode-copilot --preset full-gentleman
+```
+
+Config lives in `~/Library/Application Support/Code/User/`
+
+### Linux
+
+```bash
+# Install VS Code and Copilot manually
+# Then configure:
+gentle-ai install --agent vscode-copilot --preset full-gentleman
+```
+
+Config lives in `~/.config/Code/User/`
+
+### Windows
+
+```powershell
+# Install VS Code and Copilot manually
+# Then configure:
+gentle-ai.exe install --agent vscode-copilot --preset full-gentleman
+```
+
+Config lives in `%APPDATA%\Code\User\`
+
+## Verification
+
+After installation, verify the configuration:
+
+```bash
+# Check VS Code is installed
+code --version
+
+# Check global skills are installed
+ls ~/.copilot/skills/
+
+# macOS/Linux: Check system prompt
+ls ~/Library/Application\ Support/Code/User/prompts/  # macOS
+ls ~/.config/Code/User/prompts/                       # Linux
+
+# macOS/Linux: Check MCP config
+cat ~/Library/Application\ Support/Code/User/mcp.json  # macOS
+cat ~/.config/Code/User/mcp.json                       # Linux
+```
+
+### Windows Verification
+
+```powershell
+# Check VS Code is installed
+code --version
+
+# Check global skills are installed
+dir ~\.copilot\skills\
+
+# Check system prompt
+dir $env:APPDATA\Code\User\prompts\
+
+# Check MCP config
+type $env:APPDATA\Code\User\mcp.json
+```
+
+## Troubleshooting
+
+### Skills Not Loading
+
+If skills aren't available in Copilot:
+
+1. Check `~/.copilot/skills/` directory exists
+2. Verify skill files are markdown: `ls ~/.copilot/skills/*.md`
+3. Check instructions file references skills
+4. Reload VS Code window (Cmd+Shift+P → "Reload Window")
+
+### MCP Server Not Loading
+
+If Context7 doesn't load:
+
+1. Check `Code/User/mcp.json` exists
+2. Verify JSON is valid: `cat <path>/mcp.json | jq`
+3. Test server manually: `npx -y @context7/mcp-server`
+4. Reload VS Code window
+
+### Instructions File Not Loading
+
+If Copilot doesn't have the Gentleman persona:
+
+1. Check `Code/User/prompts/` directory exists
+2. Verify `.instructions.md` file is present
+3. Reload VS Code window
+4. Check Copilot settings for custom instructions
+
+### Path Issues on Windows
+
+If config paths are wrong on Windows:
+
+1. Check `APPDATA` environment variable: `echo $env:APPDATA`
+2. Verify path exists: `dir $env:APPDATA\Code\User`
+3. Create missing directories manually
+
+## Workspace-Specific Skills
+
+Create project-specific skills in `.github/skills/`:
+
+```bash
+mkdir -p .github/skills
+touch .github/skills/project-style.md
+```
+
+Define the skill:
+
+```markdown
+# Project Style Guide Skill
+
+When writing code for this project:
+
+- Use TypeScript strict mode
+- Follow Airbnb style guide
+- Write tests using Vitest
+- Use Zod for schema validation
+```
+
+Copilot loads both global and workspace skills.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Claude Code" icon="code" href="/agents/claude-code">
+    CLI agent with output styles
+  </Card>
+  <Card title="Cursor" icon="cursor" href="/agents/cursor">
+    Alternative IDE with async sub-agents
+  </Card>
+  <Card title="Skills Reference" icon="book" href="/components/skills">
+    Learn about the 11 curated skills
+  </Card>
+  <Card title="SDD Workflow" icon="diagram-project" href="/components/sdd">
+    Deep dive into Spec-Driven Development
+  </Card>
+</CardGroup>

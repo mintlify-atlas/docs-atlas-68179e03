@@ -1,0 +1,569 @@
+---
+title: CLI Mode
+description: Automate Gentle AI configuration with command-line flags and scripting
+icon: terminal
+---
+
+## Overview
+
+CLI mode allows you to configure the Gentle AI ecosystem without the interactive TUI. This is ideal for:
+
+- **Automation** - Scripting installations in dotfile managers
+- **CI/CD** - Configuring dev containers and cloud workspaces
+- **Repeatability** - Using the same configuration across machines
+- **Speed** - Skipping interactive prompts when you know what you want
+
+## Basic Usage
+
+The `install` command is the primary CLI interface:
+
+```bash
+gentle-ai install [flags]
+```
+
+## Quick Examples
+
+<CodeGroup>
+
+```bash Full Ecosystem
+# Install everything for Claude Code and OpenCode
+gentle-ai install \
+  --agent claude-code,opencode \
+  --preset full-gentleman
+```
+
+```bash Minimal Setup
+# Just Engram for a single agent
+gentle-ai install \
+  --agent cursor \
+  --preset minimal
+```
+
+```bash Custom Components
+# Cherry-pick specific components
+gentle-ai install \
+  --agent claude-code \
+  --component engram,sdd,skills,context7 \
+  --persona gentleman
+```
+
+```bash Dry Run Preview
+# See what would happen without making changes
+gentle-ai install --dry-run \
+  --agent claude-code,opencode \
+  --preset full-gentleman
+```
+
+</CodeGroup>
+
+## Flag Reference
+
+### Agent Selection
+
+<ParamField path="--agent" type="string" required>
+  Comma-separated list of agents to configure.
+  
+  **Valid values:**
+  - `claude-code` - Claude Code CLI
+  - `opencode` - OpenCode
+  - `gemini-cli` - Gemini CLI
+  - `cursor` - Cursor editor
+  - `vscode-copilot` - VS Code Copilot
+  
+  **Aliases:** `--agents`
+  
+  **Default:** Auto-detected from your system (agents with existing config directories)
+</ParamField>
+
+<CodeGroup>
+
+```bash Single Agent
+gentle-ai install --agent claude-code --preset minimal
+```
+
+```bash Multiple Agents
+gentle-ai install --agent claude-code,opencode,cursor --preset full-gentleman
+```
+
+```bash All Agents
+gentle-ai install \
+  --agent claude-code,opencode,gemini-cli,cursor,vscode-copilot \
+  --preset ecosystem-only
+```
+
+</CodeGroup>
+
+### Preset Selection
+
+<ParamField path="--preset" type="string">
+  Configuration preset bundle.
+  
+  **Valid values:**
+  - `full-gentleman` - All components + all skills + gentleman persona (default)
+  - `ecosystem-only` - All components + P0 skills + gentleman persona
+  - `minimal` - Engram + Persona + Permissions only
+  - `custom` - Manually specify components with `--component`
+  
+  **Default:** `full-gentleman`
+</ParamField>
+
+<CodeGroup>
+
+```bash Full Gentleman (Default)
+# All components + all skills
+gentle-ai install --agent claude-code --preset full-gentleman
+```
+
+```bash Ecosystem Only
+# Core components, foundation skills
+gentle-ai install --agent opencode --preset ecosystem-only
+```
+
+```bash Minimal
+# Just Engram memory
+gentle-ai install --agent cursor --preset minimal
+```
+
+```bash Custom
+# Pick your own components
+gentle-ai install \
+  --agent claude-code \
+  --preset custom \
+  --component engram,sdd,context7
+```
+
+</CodeGroup>
+
+### Component Selection
+
+<ParamField path="--component" type="string">
+  Comma-separated list of components to install.
+  
+  **Valid values:**
+  - `engram` - Persistent cross-session memory
+  - `sdd` - Spec-Driven Development workflow
+  - `skills` - Curated coding skill library
+  - `context7` - MCP server for live documentation
+  - `persona` - Persona mode injection
+  - `permissions` - Security-first permission defaults
+  - `gga` - Gentleman Guardian Angel provider switcher
+  - `theme` - Gentleman Kanagawa theme
+  
+  **Aliases:** `--components`
+  
+  **Default:** Derived from `--preset`
+  
+  <Warning>
+  If you specify `--component`, you must also use `--preset custom` or the components will be ignored.
+  </Warning>
+</ParamField>
+
+<CodeGroup>
+
+```bash Memory + Workflow
+gentle-ai install \
+  --agent claude-code \
+  --preset custom \
+  --component engram,sdd
+```
+
+```bash Full Stack Without Theme
+gentle-ai install \
+  --agent opencode \
+  --preset custom \
+  --component engram,sdd,skills,context7,persona,permissions,gga
+```
+
+```bash Just GGA
+gentle-ai install \
+  --agent claude-code \
+  --preset custom \
+  --component gga
+```
+
+</CodeGroup>
+
+### Skill Selection
+
+<ParamField path="--skill" type="string">
+  Comma-separated list of skills to install.
+  
+  **Valid values:**
+  - **SDD Skills:** `sdd-init`, `sdd-explore`, `sdd-propose`, `sdd-spec`, `sdd-design`, `sdd-tasks`, `sdd-apply`, `sdd-verify`, `sdd-archive`
+  - **Foundation:** `go-testing`, `skill-creator`
+  
+  **Aliases:** `--skills`
+  
+  **Default:** Derived from `--preset`
+  
+  <Info>
+  Skills are only installed if the `skills` component is selected. Individual skills are curated markdown files that teach agents specific patterns.
+  </Info>
+</ParamField>
+
+<CodeGroup>
+
+```bash Specific Skills
+gentle-ai install \
+  --agent claude-code \
+  --component skills \
+  --skill go-testing,skill-creator
+```
+
+```bash All SDD Skills
+gentle-ai install \
+  --agent opencode \
+  --component skills \
+  --skill sdd-init,sdd-explore,sdd-propose,sdd-spec,sdd-design,sdd-tasks,sdd-apply,sdd-verify,sdd-archive
+```
+
+</CodeGroup>
+
+### Persona Selection
+
+<ParamField path="--persona" type="string">
+  AI persona mode.
+  
+  **Valid values:**
+  - `gentleman` - Teaching-oriented mentor (default)
+  - `neutral` - Clean, professional tone
+  - `custom` - Use your own persona file
+  
+  **Default:** `gentleman`
+</ParamField>
+
+<CodeGroup>
+
+```bash Gentleman (Default)
+gentle-ai install --agent claude-code --persona gentleman
+```
+
+```bash Neutral
+gentle-ai install --agent opencode --persona neutral
+```
+
+```bash Custom
+# Provide your own persona.md in agent config
+gentle-ai install --agent cursor --persona custom
+```
+
+</CodeGroup>
+
+### Dry Run
+
+<ParamField path="--dry-run" type="boolean">
+  Preview the installation plan without making any changes.
+  
+  Outputs:
+  - Selected agents and components
+  - Resolved dependency order
+  - Auto-added dependencies
+  - Platform detection results
+  - Number of prepare and apply steps
+  - Missing system dependencies
+  
+  **Default:** `false`
+</ParamField>
+
+```bash
+gentle-ai install --dry-run \
+  --agent claude-code,opencode \
+  --preset full-gentleman
+```
+
+See the [Dry Run](/usage/dry-run) page for detailed output examples.
+
+## Advanced Usage
+
+### Multi-Agent Configuration
+
+Configure multiple agents with a single command:
+
+```bash
+gentle-ai install \
+  --agent claude-code,opencode,gemini-cli \
+  --preset full-gentleman
+```
+
+This applies the full Gentleman stack to all three agents:
+- Each agent gets its own config directory
+- Components are injected per-agent based on capabilities
+- Unsupported components are skipped (e.g., output styles for OpenCode)
+
+### Selective Component Installation
+
+Use `--preset custom` to install only specific components:
+
+```bash
+# Just memory and workflow
+gentle-ai install \
+  --agent claude-code \
+  --preset custom \
+  --component engram,sdd
+
+# Add MCP servers later
+gentle-ai install \
+  --agent claude-code \
+  --preset custom \
+  --component context7
+```
+
+<Tip>
+Running `install` again is idempotent - existing configurations are merged, not overwritten.
+</Tip>
+
+### GGA Installation
+
+The `gga` component installs the binary globally but does NOT run project-level hooks:
+
+```bash
+gentle-ai install --agent claude-code --component gga
+```
+
+After installation, enable GGA per project:
+
+```bash
+cd your-project/
+gga init      # Creates .gga/ directory
+gga install   # Installs git hooks
+```
+
+See the [GGA documentation](/components/gga) for details.
+
+### Cross-Platform Scripting
+
+The CLI works identically on macOS, Linux, and Windows:
+
+<CodeGroup>
+
+```bash macOS/Linux
+#!/bin/bash
+gentle-ai install \
+  --agent claude-code,opencode \
+  --preset full-gentleman
+```
+
+```powershell Windows
+# PowerShell
+gentle-ai.exe install `
+  --agent claude-code,opencode `
+  --preset full-gentleman
+```
+
+</CodeGroup>
+
+### Dotfile Integration
+
+Add to your dotfile setup script:
+
+```bash setup.sh
+#!/bin/bash
+set -e
+
+# Install Gentle AI
+if ! command -v gentle-ai &> /dev/null; then
+    curl -fsSL https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.sh | bash
+fi
+
+# Configure agents
+gentle-ai install \
+  --agent claude-code,opencode \
+  --preset full-gentleman
+
+echo "Gentle AI ecosystem configured"
+```
+
+### Dev Container Setup
+
+Add to your `.devcontainer/Dockerfile`:
+
+```dockerfile Dockerfile
+FROM mcr.microsoft.com/devcontainers/base:ubuntu
+
+# Install Gentle AI
+RUN curl -fsSL https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.sh | bash
+
+# Configure for VS Code Copilot
+RUN gentle-ai install \
+  --agent vscode-copilot \
+  --preset ecosystem-only
+```
+
+## Output Format
+
+### Success Output
+
+When installation succeeds, you'll see a verification report:
+
+```bash
+$ gentle-ai install --agent claude-code --preset minimal
+
+AI Gentle Stack - Post-Install Verification
+============================================
+
+System Ready: YES
+
+Completed Checks:
+  ✓ verify:file:/Users/you/.claude/engram.json
+  ✓ verify:engram:binary
+  ✓ verify:engram:version
+
+Configured:
+  - 1 agent (claude-code)
+  - 1 component (engram)
+
+Next Steps:
+  - Restart your AI agent to load new configurations
+  - Run 'engram status' to verify memory is working
+
+GGA is now installed globally. To enable project hooks, run in each repo:
+- gga init
+- gga install
+```
+
+### Error Output
+
+If installation fails, you'll see:
+
+```bash
+$ gentle-ai install --agent claude-code --preset full-gentleman
+
+Error: execute install pipeline: component:engram: go install: command not found
+
+WARNING: missing dependencies: go
+
+Missing Dependencies:
+  • go (required)
+    → macOS: brew install go
+    → Ubuntu/Debian: sudo apt install golang-go
+    → Arch: sudo pacman -S go
+    → Windows: winget install GoLang.Go
+```
+
+Failed steps trigger automatic rollback from the backup snapshot.
+
+## Exit Codes
+
+| Code | Meaning |
+|------|----------|
+| `0` | Success |
+| `1` | Error (unsupported platform, missing dependencies, installation failure) |
+
+Use in scripts:
+
+```bash
+if gentle-ai install --agent claude-code --preset minimal; then
+    echo "Installation succeeded"
+else
+    echo "Installation failed with exit code $?"
+    exit 1
+fi
+```
+
+## Environment Variables
+
+Gentle AI respects these environment variables:
+
+<ParamField path="ENGRAM_SETUP_MODE" type="string">
+  Control whether `engram setup` runs automatically during installation.
+  
+  **Values:**
+  - `auto` - Run setup for all agents (default)
+  - `manual` - Skip setup, run manually later
+  - `skip` - Never run setup
+</ParamField>
+
+<ParamField path="ENGRAM_SETUP_STRICT" type="boolean">
+  Fail installation if `engram setup` fails.
+  
+  **Values:**
+  - `true` - Fail on setup errors
+  - `false` - Warn but continue (default)
+</ParamField>
+
+Example:
+
+```bash
+ENGRAM_SETUP_MODE=skip gentle-ai install --agent claude-code --preset minimal
+```
+
+## Troubleshooting
+
+### "unknown command"
+
+If you see:
+
+```
+Error: unknown command "instal"
+```
+
+Check your spelling. Valid commands are:
+- `install`
+- `version` / `--version` / `-v`
+- `update`
+
+### "unsupported agent"
+
+If you see:
+
+```
+Error: unsupported agent "claude"
+```
+
+Check the exact agent ID. Valid values:
+- `claude-code` (not "claude")
+- `opencode`
+- `gemini-cli`
+- `cursor`
+- `vscode-copilot`
+
+### "unsupported component"
+
+If you specify a component that doesn't exist:
+
+```bash
+gentle-ai install --preset custom --component invalid
+# Error: unsupported component "invalid"
+```
+
+See the [Components](/concepts/components) page for valid IDs.
+
+### Installation Hangs
+
+If CLI installation appears stuck:
+
+1. Check if a command is running (e.g., `brew install`, `go install`)
+2. Press `Ctrl+C` to abort
+3. Run with `--dry-run` to see what would execute
+4. Check system dependencies: `gentle-ai install --dry-run --preset minimal`
+
+### Backup Not Created
+
+Backups are only created during real installations, not dry runs:
+
+```bash
+# No backup
+gentle-ai install --dry-run --agent claude-code --preset minimal
+
+# Creates backup
+gentle-ai install --agent claude-code --preset minimal
+```
+
+Backups are stored in `~/.gentle-ai/backups/`.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Flags Reference" icon="flag" href="/usage/flags-reference">
+    Complete reference for all CLI flags
+  </Card>
+  <Card title="Dry Run" icon="eye" href="/usage/dry-run">
+    Preview changes without modifying your system
+  </Card>
+  <Card title="Components" icon="puzzle-piece" href="/concepts/components">
+    Learn about ecosystem components
+  </Card>
+  <Card title="Presets" icon="layer-group" href="/concepts/presets">
+    Explore preset configurations
+  </Card>
+</CardGroup>

@@ -1,0 +1,384 @@
+---
+title: 'Platform Support'
+description: 'Supported operating systems, package managers, and platform-specific behaviors'
+---
+
+## Supported Platforms
+
+| Platform | Package Manager | Status | Notes |
+|----------|----------------|--------|-------|
+| macOS (Apple Silicon) | Homebrew | ✅ Supported | Primary development platform |
+| macOS (Intel) | Homebrew | ✅ Supported | Full feature parity |
+| Linux (Ubuntu/Debian) | apt | ✅ Supported | NodeSource repo for Node.js 20+ |
+| Linux (Arch/Manjaro) | pacman | ✅ Supported | Official repos are up-to-date |
+| Windows 10/11 | winget | ✅ Supported | Native PowerShell support |
+
+## Platform Detection
+
+The installer detects your platform automatically:
+
+```go
+type PlatformProfile struct {
+    OS             string  // "darwin", "linux", "windows"
+    LinuxDistro    string  // "ubuntu", "debian", "arch"
+    PackageManager string  // "brew", "apt", "pacman", "winget"
+    NpmWritable    bool    // true if npm global prefix is user-writable
+    Supported      bool
+}
+```
+
+See `/home/daytona/workspace/source/internal/system/detect.go:19`
+
+### Detection Process
+
+1. **OS Detection**: Uses `runtime.GOOS` (darwin/linux/windows)
+2. **Architecture**: Uses `runtime.GOARCH` (amd64/arm64)
+3. **Linux Distro**: Parses `/etc/os-release`
+4. **Package Manager**: Checks for brew/apt/pacman/winget
+5. **Shell**: Reads `$SHELL` environment variable
+
+## macOS
+
+### Package Manager
+
+**Homebrew** is the preferred package manager:
+
+```bash
+# Install Homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Used for:
+brew install node@20
+brew tap gentleman-programming/homebrew-tap
+brew install engram
+brew install gga
+```
+
+### Platform-Specific Behaviors
+
+- **Xcode Command Line Tools**: Required for `git`. Installer prompts to install via `xcode-select --install`
+- **BSD `sed`**: macOS uses BSD sed, which requires `sed -i ''` (empty string) instead of `sed -i`
+- **`shasum`**: macOS uses `shasum` instead of `sha256sum` for checksum verification
+- **`bash` 3.2**: Pre-installed bash is old but sufficient for GGA
+
+### Config Paths (macOS)
+
+| Agent | Config Path |
+|-------|-------------|
+| Claude Code | `~/.claude/` |
+| OpenCode | `~/.config/opencode/` |
+| Gemini CLI | `~/.gemini/` |
+| Cursor | `~/.cursor/` |
+| VS Code Copilot | `~/Library/Application Support/Code/User/` |
+
+## Linux
+
+### Ubuntu / Debian
+
+**Package Manager**: `apt`
+
+```bash
+# System packages
+sudo apt-get update
+sudo apt-get install -y git curl
+
+# Node.js 20 (via NodeSource)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+**Why NodeSource?** Ubuntu's default apt repository often has outdated Node.js (v12-v16). NodeSource provides official packages for Node.js 20+.
+
+### Arch Linux / Manjaro
+
+**Package Manager**: `pacman`
+
+```bash
+# All packages via official repos
+sudo pacman -S git curl nodejs npm
+```
+
+**Arch advantages**: Official repos are rolling-release and current. No need for third-party PPAs.
+
+### Distro Detection
+
+Detection uses `/etc/os-release`:
+
+```bash
+ID=ubuntu
+ID_LIKE=debian
+VERSION_ID="22.04"
+```
+
+**Supported derivatives**:
+- Pop!_OS (Ubuntu-based)
+- Linux Mint (Ubuntu/Debian-based)
+- EndeavourOS (Arch-based)
+- Manjaro (Arch-based)
+
+Detection logic:
+
+```go
+func isUbuntuLike(id, idLike string) bool {
+    if id == "ubuntu" || id == "debian" {
+        return true
+    }
+    for _, token := range strings.Fields(idLike) {
+        if token == "ubuntu" || token == "debian" {
+            return true
+        }
+    }
+    return false
+}
+```
+
+See `/home/daytona/workspace/source/internal/system/detect.go:196`
+
+### Homebrew on Linux
+
+Homebrew is optionally supported on Linux:
+
+```go
+if brew, ok := tools["brew"]; ok && brew.Installed {
+    profile.PackageManager = "brew"
+    profile.Supported = true
+    return profile
+}
+```
+
+See `/home/daytona/workspace/source/internal/system/detect.go:128`
+
+If Homebrew is detected, it becomes the preferred package manager (consistent with macOS behavior).
+
+### Config Paths (Linux)
+
+Same as macOS:
+
+| Agent | Config Path |
+|-------|-------------|
+| Claude Code | `~/.claude/` |
+| OpenCode | `~/.config/opencode/` |
+| Gemini CLI | `~/.gemini/` |
+| Cursor | `~/.cursor/` |
+| VS Code Copilot | `~/.config/Code/User/` |
+
+## Windows
+
+### Package Manager
+
+**winget** (Windows Package Manager) is pre-installed on Windows 10/11:
+
+```powershell
+# Install packages
+winget install Git.Git
+winget install OpenJS.NodeJS.LTS
+```
+
+### Platform-Specific Behaviors
+
+- **No sudo**: npm global installs are user-writable by default
+- **curl pre-installed**: Windows 10+ includes curl.exe
+- **PowerShell default**: When `$SHELL` is not set, defaults to `powershell`
+- **Git Bash**: GGA requires bash, which is included with Git for Windows
+- **Path separators**: Uses `\` instead of `/` (handled by `filepath.Join`)
+
+### npm Global Prefix
+
+On Windows, npm's global prefix is user-writable by default:
+
+```go
+if runtime.GOOS == "windows" {
+    result.System.Profile.NpmWritable = true
+}
+```
+
+See `/home/daytona/workspace/source/internal/system/detect.go:57`
+
+This means no elevation is required for:
+
+```powershell
+npm install -g @anthropic-ai/claude-code
+npm install -g @google/generative-ai-cli
+```
+
+### Config Paths (Windows)
+
+| Agent | Config Path |
+|-------|-------------|
+| Claude Code | `%USERPROFILE%\.claude\` |
+| OpenCode | `%USERPROFILE%\.config\opencode\` |
+| Gemini CLI | `%USERPROFILE%\.gemini\` |
+| Cursor | `%USERPROFILE%\.cursor\` |
+| VS Code Copilot | `%APPDATA%\Code\User\` |
+
+### Security Verification
+
+Some antivirus products flag unsigned Go binaries. Verify integrity using checksums:
+
+```powershell
+# Download checksums.txt from release
+$hash = Get-FileHash .\gentle-ai_0.1.0_windows_amd64.zip -Algorithm SHA256
+
+# Compare with checksums.txt
+Select-String -Path checksums.txt -Pattern "gentle-ai_0.1.0_windows_amd64.zip"
+```
+
+If hashes match, the binary is authentic.
+
+## Release Binaries
+
+Pre-built binaries are provided for all platforms:
+
+| OS | Architecture | Binary Name |
+|----|-------------|-------------|
+| macOS | arm64 | `gentle-ai_darwin_arm64.tar.gz` |
+| macOS | amd64 | `gentle-ai_darwin_amd64.tar.gz` |
+| Linux | arm64 | `gentle-ai_linux_arm64.tar.gz` |
+| Linux | amd64 | `gentle-ai_linux_amd64.tar.gz` |
+| Windows | amd64 | `gentle-ai_windows_amd64.zip` |
+
+**Archive formats**:
+- macOS/Linux: `.tar.gz`
+- Windows: `.zip`
+
+## Platform-Specific Install Commands
+
+### Component: Engram
+
+**macOS**:
+```bash
+brew tap gentleman-programming/homebrew-tap
+brew install engram
+```
+
+**Ubuntu/Debian**:
+```bash
+curl -fsSL -o /tmp/engram https://github.com/Gentleman-Programming/engram/releases/download/v0.1.0/engram_linux_amd64
+chmod +x /tmp/engram
+sudo mv /tmp/engram /usr/local/bin/engram
+```
+
+**Arch**:
+```bash
+curl -fsSL -o /tmp/engram https://github.com/Gentleman-Programming/engram/releases/download/v0.1.0/engram_linux_amd64
+chmod +x /tmp/engram
+sudo mv /tmp/engram /usr/local/bin/engram
+```
+
+**Windows**:
+```powershell
+Invoke-WebRequest -Uri "https://github.com/Gentleman-Programming/engram/releases/download/v0.1.0/engram_windows_amd64.exe" -OutFile "$env:LOCALAPPDATA\Programs\engram.exe"
+```
+
+### Component: GGA
+
+**macOS**:
+```bash
+brew tap gentleman-programming/homebrew-tap
+brew install gga
+```
+
+**Ubuntu/Debian**:
+```bash
+curl -fsSL -o /tmp/gga https://github.com/Gentleman-Programming/gentleman-guardian-angel/releases/download/v0.1.0/gga_linux_amd64
+chmod +x /tmp/gga
+sudo mv /tmp/gga /usr/local/bin/gga
+```
+
+**Windows**:
+```powershell
+Invoke-WebRequest -Uri "https://github.com/Gentleman-Programming/gentleman-guardian-angel/releases/download/v0.1.0/gga_windows_amd64.exe" -OutFile "$env:LOCALAPPDATA\Programs\gga.exe"
+```
+
+## Cross-Platform Path Handling
+
+The codebase uses `filepath.Join` for cross-platform path construction:
+
+```go
+// Correct (works on all platforms)
+configPath := filepath.Join(homeDir, ".claude", "CLAUDE.md")
+
+// Wrong (Unix-only)
+configPath := homeDir + "/.claude/CLAUDE.md"
+```
+
+All agent adapters use platform-agnostic path resolution:
+
+```go
+func (a ClaudeAdapter) GlobalConfigDir(homeDir string) string {
+    return filepath.Join(homeDir, ".claude")
+}
+```
+
+## Testing Across Platforms
+
+### E2E Tests
+
+Docker-based E2E tests for Linux:
+
+```bash
+# Ubuntu + Arch in Docker
+RUN_FULL_E2E=1 RUN_BACKUP_TESTS=1 ./e2e/docker-test.sh
+```
+
+See `/home/daytona/workspace/source/e2e/`
+
+### Platform-Specific Unit Tests
+
+```go
+func TestPathResolution_Windows(t *testing.T) {
+    if runtime.GOOS != "windows" {
+        t.Skip("Windows-only test")
+    }
+    // ...
+}
+```
+
+All 5 agent adapters have cross-platform path validation tests.
+
+## Unsupported Platforms
+
+Currently unsupported:
+
+- **Fedora/RHEL**: Detection exists but install commands not implemented
+- **Termux (Android)**: No sudo, no Homebrew, special pkg manager
+- **FreeBSD/OpenBSD**: Not detected
+
+To add support:
+
+1. Add detection in `internal/system/detect.go`
+2. Add package manager in `internal/installcmd/resolver.go`
+3. Add install hints in `internal/system/deps.go`
+4. Test with E2E suite
+
+## Platform Capabilities Matrix
+
+<CardGroup cols={2}>
+  <Card title="macOS" icon="apple">
+    ✅ Homebrew integration  
+    ✅ Native binaries (arm64 + amd64)  
+    ✅ Auto-start via launchd  
+    ✅ Full TUI support  
+  </Card>
+  
+  <Card title="Linux" icon="linux">
+    ✅ Multi-distro support  
+    ✅ systemd auto-start  
+    ✅ Native binaries  
+    ✅ Full TUI support  
+  </Card>
+  
+  <Card title="Windows" icon="windows">
+    ✅ winget integration  
+    ✅ PowerShell scripts  
+    ✅ Native binaries (amd64)  
+    ✅ Full TUI support  
+  </Card>
+  
+  <Card title="Cross-Platform" icon="globe">
+    ✅ Same config structure  
+    ✅ Same CLI commands  
+    ✅ Same feature set  
+    ✅ Same agent support  
+  </Card>
+</CardGroup>

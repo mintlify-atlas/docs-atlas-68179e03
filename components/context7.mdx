@@ -1,0 +1,292 @@
+---
+title: "Context7"
+description: "MCP server for live framework and library documentation"
+icon: "book-open"
+---
+
+Context7 is an MCP server that provides real-time access to framework and library documentation. Your AI agent can query up-to-date docs for React, Next.js, TypeScript, and hundreds of other libraries without relying on stale training data.
+
+## What it does
+
+Context7 gives your AI agent:
+- **Live documentation**: Query current docs for popular frameworks and libraries
+- **Always up-to-date**: No reliance on training cutoff dates
+- **Framework expertise**: React, Next.js, Vue, Angular, TypeScript, Tailwind, and more
+- **API references**: Function signatures, types, examples from official docs
+- **Best practices**: Current recommendations from maintainers
+
+## Installation
+
+Context7 is installed as an MCP server configuration that points to the remote Context7 service.
+
+### What gets configured
+
+<Info>
+The exact configuration depends on which agent you're using. Some agents use remote HTTP connections, others use `npx` to run the client locally.
+</Info>
+
+**MCP Server Config**
+- Claude Code: `~/.claude/mcp-servers/context7.json`
+- OpenCode: `~/.config/opencode/opencode.json` (merged into `mcp` section, remote)
+- Gemini CLI: `~/.gemini/settings.json` (merged into `mcpServers`, npx)
+- Cursor: `~/.cursor/mcp.json` (merged, npx)
+- VS Code Copilot: `%APPDATA%/Code/User/mcp.json` (merged, HTTP)
+
+## Supported libraries
+
+Context7 has documentation for 100+ popular libraries:
+
+<AccordionGroup>
+<Accordion title="Frontend Frameworks" icon="react">
+- React
+- Next.js
+- Vue
+- Nuxt
+- Angular
+- Svelte
+- SvelteKit
+- Solid.js
+- Qwik
+- Astro
+- Remix
+</Accordion>
+
+<Accordion title="Styling" icon="palette">
+- Tailwind CSS
+- CSS Modules
+- Styled Components
+- Emotion
+- Sass
+- PostCSS
+</Accordion>
+
+<Accordion title="State Management" icon="database">
+- Redux
+- Zustand
+- Jotai
+- Recoil
+- MobX
+- XState
+- Pinia (Vue)
+</Accordion>
+
+<Accordion title="Build Tools" icon="hammer">
+- Vite
+- Webpack
+- Rollup
+- esbuild
+- Turbopack
+- Parcel
+</Accordion>
+
+<Accordion title="Testing" icon="flask">
+- Jest
+- Vitest
+- Testing Library
+- Playwright
+- Cypress
+- Storybook
+</Accordion>
+
+<Accordion title="Backend" icon="server">
+- Node.js
+- Express
+- Fastify
+- NestJS
+- tRPC
+- Prisma
+- Drizzle
+</Accordion>
+
+<Accordion title="Languages" icon="code">
+- TypeScript
+- JavaScript (MDN)
+- Python
+- Go
+- Rust
+</Accordion>
+</AccordionGroup>
+
+## How it works
+
+When your AI agent needs current documentation:
+
+1. **Agent detects documentation need**: User asks about a framework or library feature
+2. **MCP query**: Agent calls Context7 MCP server with library name and query
+3. **Live fetch**: Context7 retrieves current docs from official sources
+4. **Structured response**: Returns relevant docs, API references, examples
+5. **Agent applies**: Uses fresh documentation to answer accurately
+
+### Example workflow
+
+```typescript
+// User: "How do I use React Server Components in Next.js 15?"
+
+// Agent (internal):
+// 1. Detects Next.js context
+// 2. Calls Context7 MCP: query(library: "nextjs", topic: "server components")
+// 3. Receives current Next.js 15 docs
+// 4. Responds with accurate, up-to-date guidance
+
+// Agent response:
+// "In Next.js 15, Server Components are the default. Here's the current pattern..."
+```
+
+## Configuration examples
+
+<CodeGroup>
+
+```json Claude Code
+// ~/.claude/mcp-servers/context7.json
+{
+  "command": "npx",
+  "args": [
+    "-y",
+    "@upstash/context7-mcp"
+  ]
+}
+```
+
+```json OpenCode (remote)
+// ~/.config/opencode/opencode.json
+{
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    }
+  }
+}
+```
+
+```json Gemini CLI (npx)
+// ~/.gemini/settings.json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    }
+  }
+}
+```
+
+```json VS Code Copilot (HTTP)
+// %APPDATA%/Code/User/mcp.json
+{
+  "servers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+## When to use Context7
+
+Context7 is most valuable when:
+
+<CardGroup cols={2}>
+<Card title="Learning new features" icon="graduation-cap">
+Agent's training data is outdated for recent framework releases
+
+**Example**: React 19 features, Next.js 15 App Router changes
+</Card>
+
+<Card title="API accuracy" icon="bullseye">
+Need exact function signatures and types
+
+**Example**: TypeScript utility types, React hook APIs
+</Card>
+
+<Card title="Migration guidance" icon="arrow-right-arrow-left">
+Upgrading between major versions
+
+**Example**: Vue 2 to Vue 3, Webpack to Vite
+</Card>
+
+<Card title="Best practices" icon="star">
+Current recommendations from maintainers
+
+**Example**: Next.js data fetching patterns, React performance optimization
+</Card>
+</CardGroup>
+
+## Remote vs npx mode
+
+### Remote (OpenCode, VS Code Copilot)
+
+- Direct HTTPS connection to Context7 service
+- No local dependencies
+- Faster (no npx overhead)
+- Requires internet connection
+
+### npx (Claude Code, Gemini CLI, Cursor)
+
+- Runs Context7 client locally via npx
+- Downloads on first use
+- More compatible with older agent versions
+- Still requires internet for doc queries
+
+<Note>
+Both modes query the same Context7 service and return identical results. The difference is only in how the MCP client is launched.
+</Note>
+
+## Limitations
+
+<Warning>
+**Context7 is not**:
+- A code search tool (use agent's native code search)
+- A package installation guide (use npm/yarn/pnpm docs)
+- A tutorial generator (agent uses Context7 docs to write tutorials)
+</Warning>
+
+Context7 provides **official documentation**, not community tutorials or Stack Overflow answers.
+
+## Troubleshooting
+
+### npx mode: Client not found
+
+If the agent reports Context7 MCP client not found:
+
+```bash
+# Manually install the client
+npm install -g @upstash/context7-mcp
+
+# Or use npx (downloads on first use)
+npx -y @upstash/context7-mcp --help
+```
+
+### Remote mode: Connection refused
+
+If remote mode fails:
+
+```json
+// Switch to npx mode in your agent config
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  }
+}
+```
+
+## Related components
+
+<CardGroup cols={2}>
+<Card title="Engram" icon="brain" href="/components/engram">
+  Persistent cross-session memory
+</Card>
+<Card title="Skills" icon="book" href="/components/skills">
+  Curated coding skill library
+</Card>
+</CardGroup>
